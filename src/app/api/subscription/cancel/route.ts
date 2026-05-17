@@ -32,9 +32,42 @@ export async function POST(req: Request) {
     }
 
     // Update Stripe subscription to cancel at period end
-    await stripe.subscriptions.update(subscription.stripe_subscription_id, {
-      cancel_at_period_end: true,
-    });
+    try {
+      const stripeSub = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id);
+      
+      if (stripeSub.status === "canceled") {
+        // If already canceled on Stripe, sync local DB immediately
+        await supabaseAdmin
+          .from("subscriptions")
+          .update({
+            status: "canceled",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userId)
+          .eq("stripe_subscription_id", subscription.stripe_subscription_id);
+
+        return NextResponse.json({ success: true, message: "すでに解約済みです。" });
+      }
+
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        cancel_at_period_end: true,
+      });
+    } catch (stripeError: any) {
+      if (stripeError.message && stripeError.message.includes("canceled subscription")) {
+        // Fallback: If Stripe throws "canceled subscription" error, sync DB and succeed gracefully
+        await supabaseAdmin
+          .from("subscriptions")
+          .update({
+            status: "canceled",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userId)
+          .eq("stripe_subscription_id", subscription.stripe_subscription_id);
+
+        return NextResponse.json({ success: true, message: "すでに解約済みでしたので、データを同期しました。" });
+      }
+      throw stripeError;
+    }
 
     // Update local database status to "canceled" (meaning cancel pending/scheduled)
     const { error: updateError } = await supabaseAdmin
