@@ -387,7 +387,10 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
               </div>
             </div>
 
-            <main className="flex-1 flex flex-col overflow-y-auto pb-24 md:pb-28">
+            <main 
+              className="flex-1 flex flex-col overflow-y-auto pb-24 md:pb-28"
+              style={{ paddingTop: "env(safe-area-inset-top)" }}
+            >
               {children}
             </main>
             
