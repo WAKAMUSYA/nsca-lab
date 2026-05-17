@@ -253,43 +253,7 @@ export default function MyPage() {
     }
   };
 
-  // Mock monthly subscription simulator
-  const toggleMockSubscription = async () => {
-    if (!user) return;
-    const nextState = !isSaMember;
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_sa_member: nextState })
-        .eq("id", user.id);
-      if (error) throw error;
-      setIsSaMember(nextState);
-      window.dispatchEvent(new Event("nsca_storage_update"));
-    } catch (e) {
-      console.error("Mock subscription failed:", e);
-    }
-  };
 
-  // Mock NSCA annual pass simulator
-  const toggleMockNscaAnnualPass = () => {
-    if (!user) return;
-    const nextState = !hasNscaAnnualPass;
-    if (nextState) {
-      setHasNscaAnnualPass(true);
-      const expiryStr = new Date(Date.now() + 324 * 24 * 60 * 60 * 1000).toISOString();
-      setNscaExpiresAt(expiryStr);
-      setDaysLeftNsca(324);
-      localStorage.setItem("nsca_simulated_annual_pass", "true");
-      localStorage.setItem("nsca_simulated_expiry", expiryStr);
-    } else {
-      setHasNscaAnnualPass(false);
-      setNscaExpiresAt(null);
-      setDaysLeftNsca(null);
-      localStorage.removeItem("nsca_simulated_annual_pass");
-      localStorage.removeItem("nsca_simulated_expiry");
-    }
-    window.dispatchEvent(new Event("nsca_storage_update"));
-  };
 
   const handleInstallPwa = async () => {
     if (!deferredPrompt) return;
@@ -623,40 +587,7 @@ export default function MyPage() {
 
 
 
-        {/* 6. Development simulated billing toggle (ONLY when logged in) */}
-        {user && (
-          <div className="premium-card p-4 bg-amber-50/40 border border-amber-200 rounded-2xl">
-            <h4 className="text-[10px] font-black text-amber-800 mb-2 flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-bounce" />
-              【開発用】契約プラン模擬切り替えパネル
-            </h4>
-            <p className="text-[9px] text-amber-700 leading-relaxed mb-3">
-              本番課金前のテスト用に、月額会員（共通プラン）や年間パス（NSCA LAB単体）をON/OFFし、残り日数カウントダウンの挙動を直接シミュレーション可能です。
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={toggleMockSubscription}
-                className={`py-2 px-2 rounded-xl text-[9px] font-bold border transition-all cursor-pointer ${
-                  isSaMember 
-                    ? "bg-slate-900 border-slate-900 text-white" 
-                    : "bg-white border-amber-300 text-amber-800 hover:bg-amber-50"
-                }`}
-              >
-                {isSaMember ? "SA月額 解除" : "SA月額 模擬契約"}
-              </button>
-              <button
-                onClick={toggleMockNscaAnnualPass}
-                className={`py-2 px-2 rounded-xl text-[9px] font-bold border transition-all cursor-pointer ${
-                  hasNscaAnnualPass 
-                    ? "bg-slate-900 border-slate-900 text-white" 
-                    : "bg-white border-amber-300 text-amber-800 hover:bg-amber-50"
-                }`}
-              >
-                {hasNscaAnnualPass ? "年間パス 解除" : "年間パス 模擬契約"}
-              </button>
-            </div>
-          </div>
-        )}
+
 
         {/* 7. Dedicated PWA Installation Trigger Widget */}
         {!isAlreadyInstalled && (
