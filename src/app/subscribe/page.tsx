@@ -192,8 +192,8 @@ export default function SubscribePage() {
                     <Check className="w-2.5 h-2.5" />
                   </div>
                   <div>
-                    <h4 className="text-[11px] font-bold text-slate-200">全3回分のフル模擬試験が解放</h4>
-                    <p className="text-[9px] text-slate-400 mt-0.5">お試し用第1回に加え、プレミアム用の第2回・第3回が使い放題。</p>
+                    <h4 className="text-[11px] font-bold text-slate-200">模擬試験・問題演習への無制限アクセス</h4>
+                    <p className="text-[9px] text-slate-400 mt-0.5">随時追加・拡充されるすべての極上模擬試験＆シャッフル特訓問題が完全開放。</p>
                   </div>
                 </div>
 

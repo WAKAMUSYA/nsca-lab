@@ -110,20 +110,12 @@ export default function MyPage() {
             .single()
             .then(({ data: profile }) => {
               if (profile) {
-                if (profile.is_sa_member !== true) {
-                  // Kick out non-subscribed active sessions
-                  supabase.auth.signOut();
-                  setUser(null);
-                  setNickname("ゲストメンバー");
-                  setIsSaMember(false);
-                } else {
-                  setUser(user);
-                  setNickname(profile.nickname || "メンバー");
-                  setIsSaMember(true);
-                  setNewNickname(profile.nickname || "メンバー");
-                  // Auto sync progress
-                  supabaseService.syncAll();
-                }
+                setUser(user);
+                setNickname(profile.nickname || "メンバー");
+                setIsSaMember(!!profile.is_sa_member);
+                setNewNickname(profile.nickname || "メンバー");
+                // Auto sync progress
+                supabaseService.syncAll();
               } else {
                 // Safely clear undefined profiles
                 supabase.auth.signOut();
@@ -190,27 +182,17 @@ export default function MyPage() {
         });
         if (error) throw error;
         
-        // Fetch profile and verify SA subscription gate
+        // Fetch profile
         const { data: profile } = await supabase
           .from("profiles")
           .select("nickname, is_sa_member")
           .eq("id", data.user.id)
           .single();
 
-        if (!profile || profile.is_sa_member !== true) {
-          // Immediately sign out and clear states
-          await supabase.auth.signOut();
-          setUser(null);
-          setNickname("ゲストメンバー");
-          setIsSaMember(false);
-          setAuthError("⚠️ ログイン制限: このアカウントはSA月額プラン(500円)の有効なご契約が確認できません。アプリの全機能をご利用いただくには、ご加入が必要です。");
-          return;
-        }
-
         setUser(data.user);
-        setNickname(profile.nickname || "メンバー");
-        setIsSaMember(true);
-        setNewNickname(profile.nickname || "メンバー");
+        setNickname(profile?.nickname || "メンバー");
+        setIsSaMember(!!profile?.is_sa_member);
+        setNewNickname(profile?.nickname || "メンバー");
 
         // Load cloud data and sync
         setSyncing(true);
