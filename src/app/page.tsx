@@ -438,28 +438,28 @@ export default function Home() {
         <div className="mt-8 premium-card p-4 border-slate-200/60">
           <div className="flex items-center gap-2 mb-3">
             <Settings className="w-4 h-4 text-slate-400 animate-spin" style={{ animationDuration: '6s' }} />
-            <h4 className="text-xs font-bold text-slate-500">受験情報のカスタマイズ</h4>
+            <h4 className="text-xs font-bold text-slate-500">資格選択</h4>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleExamTypeChange("CSCS")}
-              className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+              className={`py-2.5 px-3 text-xs font-extrabold rounded-lg border transition-all ${
                 examType === "CSCS"
-                  ? "bg-slate-900 border-slate-900 text-white"
+                  ? "bg-slate-900 border-slate-900 text-white shadow-sm"
                   : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
             >
-              CSCS 受験モデル
+              CSCS
             </button>
             <button
               onClick={() => handleExamTypeChange("NSCA-CPT")}
-              className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all ${
+              className={`py-2.5 px-3 text-xs font-extrabold rounded-lg border transition-all ${
                 examType === "NSCA-CPT"
-                  ? "bg-slate-900 border-slate-900 text-white"
+                  ? "bg-slate-900 border-slate-900 text-white shadow-sm"
                   : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
             >
-              NSCA-CPT 受験モデル
+              CPT
             </button>
           </div>
         </div>

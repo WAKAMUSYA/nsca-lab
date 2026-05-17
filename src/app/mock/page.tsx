@@ -18,7 +18,8 @@ import {
   Sparkles,
   AlertTriangle,
   FileText,
-  Lock
+  Lock,
+  Settings
 } from "lucide-react";
 
 export default function MockExams() {
@@ -194,44 +195,50 @@ export default function MockExams() {
       {/* Dynamic Header */}
       {!isExamRunning ? (
         <>
-          <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-            <div className="px-4 py-4 flex items-center gap-3">
-              <Link href="/" className="text-slate-500 hover:text-slate-700">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <h1 className="font-extrabold text-base text-slate-900">模擬試験</h1>
-            </div>
-            
-            {/* 資格種別切り替えタブ (CSCS ⇄ NSCA-CPT) */}
-            <div className="flex border-t border-slate-100">
-              <button
-                onClick={() => handleSwitchType("CSCS")}
-                className={`flex-1 py-3 text-xs font-black text-center transition-all border-b-2 ${
-                  examType === "CSCS"
-                    ? "border-indigo-600 text-indigo-600 bg-indigo-50/10"
-                    : "border-transparent text-slate-400 hover:text-slate-500"
-                }`}
-              >
-                🔥 CSCS 模擬試験 (5セット)
-              </button>
-              <button
-                onClick={() => handleSwitchType("NSCA-CPT")}
-                className={`flex-1 py-3 text-xs font-black text-center transition-all border-b-2 ${
-                  examType === "NSCA-CPT"
-                    ? "border-indigo-600 text-indigo-600 bg-indigo-50/10"
-                    : "border-transparent text-slate-400 hover:text-slate-500"
-                }`}
-              >
-                💪 NSCA-CPT 模擬試験 (5セット)
-              </button>
-            </div>
+          <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-30 flex items-center gap-3 shadow-sm">
+            <Link href="/" className="text-slate-500 hover:text-slate-700">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="font-extrabold text-base text-slate-900">模擬試験</h1>
           </div>
 
-          <div className="px-4 py-6 flex flex-col gap-4">
+          <div className="px-4 py-6 flex flex-col gap-6">
             
+            {/* 資格選択カード (ホームとデザイン・テキストを完全統一) */}
+            <div className="premium-card p-4 border-slate-200/60 bg-white">
+              <div className="flex items-center gap-2 mb-3">
+                <Settings className="w-4 h-4 text-slate-400 animate-spin" style={{ animationDuration: '6s' }} />
+                <h4 className="text-xs font-bold text-slate-500">資格選択</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleSwitchType("CSCS")}
+                  className={`py-2.5 px-3 text-xs font-extrabold rounded-lg border transition-all ${
+                    examType === "CSCS"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  CSCS
+                </button>
+                <button
+                  onClick={() => handleSwitchType("NSCA-CPT")}
+                  className={`py-2.5 px-3 text-xs font-extrabold rounded-lg border transition-all ${
+                    examType === "NSCA-CPT"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  CPT
+                </button>
+              </div>
+            </div>
+
             {/* Mock Exams List */}
             <div className="flex flex-col gap-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">模擬試験一覧 ({examType})</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">
+                {examType === "CSCS" ? "CSCS 模擬試験一覧" : "CPT 模擬試験一覧"}
+              </h3>
 
               {mockExams.map((mock) => {
                 const scoreKey = `${examType}-${mock.id}`;
@@ -261,7 +268,7 @@ export default function MockExams() {
                       
                       <h4 className="font-extrabold text-sm text-slate-900 mt-2 flex items-center gap-1.5 animate-in fade-in duration-300">
                         <span className="text-[8px] bg-slate-100 text-slate-500 font-black px-1.5 py-0.5 rounded border border-slate-200">
-                          {examType}
+                          {examType === "NSCA-CPT" ? "CPT" : examType}
                         </span>
                         {mock.title}
                       </h4>
