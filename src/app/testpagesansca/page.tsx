@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Zap, ShieldAlert, Sparkles, Clock } from "lucide-react";
+import { ArrowLeft, Zap, ShieldAlert, Sparkles } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
 export default function TestPageSanSca() {
   const [user, setUser] = useState<any>(null);
   const [isSaMember, setIsSaMember] = useState(false);
-  const [hasNscaAnnualPass, setHasNscaAnnualPass] = useState(false);
-  const [daysLeftNsca, setDaysLeftNsca] = useState<number | null>(null);
-  const [nscaExpiresAt, setNscaExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const checkUserStatus = async () => {
@@ -32,19 +29,6 @@ export default function TestPageSanSca() {
       
       if (profile) {
         setIsSaMember(profile.is_sa_member || false);
-      }
-
-      // Check simulated NSCA Annual Pass
-      const simulatedNscaAnnual = localStorage.getItem("nsca_simulated_annual_pass") === "true";
-      setHasNscaAnnualPass(simulatedNscaAnnual);
-      if (simulatedNscaAnnual) {
-        const savedExpiry = localStorage.getItem("nsca_simulated_expiry") || new Date(Date.now() + 324 * 24 * 60 * 60 * 1000).toISOString();
-        setNscaExpiresAt(savedExpiry);
-        const diff = Math.ceil((new Date(savedExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-        setDaysLeftNsca(diff > 0 ? diff : 0);
-      } else {
-        setNscaExpiresAt(null);
-        setDaysLeftNsca(null);
       }
     }
     setLoading(false);
@@ -75,30 +59,6 @@ export default function TestPageSanSca() {
     }
   };
 
-  const toggleMockNscaAnnualPass = () => {
-    if (!user) {
-      alert("この操作を行うにはログインが必要です。マイページ等からログインしてください。");
-      return;
-    }
-    const nextState = !hasNscaAnnualPass;
-    if (nextState) {
-      setHasNscaAnnualPass(true);
-      const expiryStr = new Date(Date.now() + 324 * 24 * 60 * 60 * 1000).toISOString();
-      setNscaExpiresAt(expiryStr);
-      setDaysLeftNsca(324);
-      localStorage.setItem("nsca_simulated_annual_pass", "true");
-      localStorage.setItem("nsca_simulated_expiry", expiryStr);
-    } else {
-      setHasNscaAnnualPass(false);
-      setNscaExpiresAt(null);
-      setDaysLeftNsca(null);
-      localStorage.removeItem("nsca_simulated_annual_pass");
-      localStorage.removeItem("nsca_simulated_expiry");
-    }
-    window.dispatchEvent(new Event("nsca_storage_update"));
-    alert(`🎫 NSCA専用年間パスを模擬的に ${nextState ? "契約" : "解除"} しました！`);
-  };
-
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       {/* Header */}
@@ -120,9 +80,9 @@ export default function TestPageSanSca() {
           <div className="w-12 h-12 rounded-2xl bg-amber-400/10 flex items-center justify-center text-amber-400 mx-auto mb-3 border border-amber-400/20">
             <Zap className="w-6 h-6 animate-pulse" />
           </div>
-          <h1 className="text-lg font-black text-white">SA ＆ NSCA 模擬プラン切り替え</h1>
+          <h1 className="text-lg font-black text-white">SA 模擬プラン切り替え</h1>
           <p className="text-slate-400 text-[10px] mt-1.5 leading-relaxed">
-            本番決済（Stripeなど）を導入する前段階のシミュレーション用に、ログイン中のアカウントに対して「SA月額会員（Supabase）」や「NSCA専用年間パス（LocalStorage）」の状態を手動で安全にON/OFFすることができます。
+            本番決済（Stripeなど）を導入する前段階のシミュレーション用に、ログイン中のアカウントに対して「SA月額会員（Supabase）」の状態を手動で安全にON/OFFすることができます。
           </p>
         </div>
 
@@ -181,42 +141,6 @@ export default function TestPageSanSca() {
                   {isSaMember ? "模擬契約 解除" : "模擬契約 ON"}
                 </button>
               </div>
-
-              {/* NSCA LAB Annual Pass */}
-              <div className="p-3.5 bg-slate-900/50 border border-slate-800 rounded-2xl flex justify-between items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-xs font-black text-white flex items-center gap-1.5">
-                    🎫 NSCA LAB 専用年間パス
-                  </p>
-                  <p className="text-[9px] text-slate-500 mt-0.5 leading-relaxed">
-                    ローカルに324日有効な模擬期限スタンプを設定します。
-                  </p>
-                </div>
-                <button
-                  onClick={toggleMockNscaAnnualPass}
-                  className={`px-3 py-2 rounded-xl text-[9px] font-bold border transition-all cursor-pointer ${
-                    hasNscaAnnualPass 
-                      ? "bg-rose-600 border-rose-500 text-white hover:bg-rose-500 shadow-md shadow-rose-950/20" 
-                      : "bg-slate-850 border-slate-700 text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  {hasNscaAnnualPass ? "模擬契約 解除" : "模擬契約 ON"}
-                </button>
-              </div>
-
-              {/* Expiry status badge */}
-              {hasNscaAnnualPass && daysLeftNsca !== null && (
-                <div className="bg-indigo-950/30 border border-indigo-900/40 rounded-2xl p-4 flex items-center gap-3.5 animate-in slide-in-from-top-4 duration-300">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 flex-shrink-0">
-                    <Clock className="w-4 h-4 animate-pulse" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider">NSCA LAB 年間パス模擬有効期限</p>
-                    <h4 className="font-extrabold text-xs text-white mt-0.5">残り {daysLeftNsca} 日間利用可能</h4>
-                    <p className="text-[8px] text-indigo-300 mt-0.5">満了予定日: {new Date(nscaExpiresAt!).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Note */}

@@ -248,31 +248,26 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
             </div>
 
             {/* Pricing Section on LP */}
-            <div className="mt-16 w-full max-w-3xl bg-indigo-950/20 border border-indigo-900/50 rounded-3xl p-8 flex flex-col gap-6 backdrop-blur-sm">
+            <div className="mt-16 w-full max-w-xl bg-indigo-950/20 border border-indigo-900/50 rounded-3xl p-8 flex flex-col gap-6 backdrop-blur-sm">
               <div className="text-center flex flex-col gap-2">
                 <h3 className="text-lg font-black text-white">特訓プランの価格体系</h3>
                 <p className="text-slate-400 text-xs">すべての機能（300問・弱点分析・間違いノート・模擬試験）をお試し可能</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between text-left">
-                  <div>
-                    <span className="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-black border border-amber-500/20">👑 共通パス</span>
-                    <h4 className="font-extrabold text-sm text-white mt-2">SA月額会員</h4>
-                    <p className="text-xs text-indigo-400 font-bold mt-1">月額 500円</p>
-                    <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                      NSCA LABだけでなく、腰痛復帰リハビリサイトなどすべてのStrength Arts連携システムを使い倒せる共通プラン。
-                    </p>
+              <div className="bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 rounded-2xl border border-slate-800 text-center flex flex-col items-center gap-4 relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
+                
+                <div>
+                  <span className="text-[9px] bg-amber-500/10 text-amber-400 px-2.5 py-0.5 rounded font-black border border-amber-500/20 uppercase tracking-widest animate-pulse">
+                    👑 SA月額プレミアム会員
+                  </span>
+                  <h4 className="font-black text-lg text-white mt-3">SA月額プラン</h4>
+                  <div className="flex items-baseline justify-center gap-1 mt-2">
+                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">500</span>
+                    <span className="text-xs font-bold text-slate-400">円 / 月 (税込)</span>
                   </div>
-                </div>
-                <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between text-left">
-                  <div>
-                    <span className="text-[9px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded font-black border border-indigo-500/20">🎫 専用パス</span>
-                    <h4 className="font-extrabold text-sm text-white mt-2">NSCA LAB 年次</h4>
-                    <p className="text-xs text-indigo-400 font-bold mt-1">年額 2,000円</p>
-                    <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
-                      NSCA試験合格に向けて1年間完全に使いこなしたい方向けの、最も安価で手軽な専用年間チケット。
-                    </p>
-                  </div>
+                  <p className="text-[11px] text-slate-400 mt-3 leading-relaxed max-w-sm mx-auto">
+                    NSCA LABの全機能を無制限で使いこなせるほか、Strength Artsが提供するすべての試験・運動指導支援 PWA サービスが使い放題になる共通のオールアクセスパス。
+                  </p>
                 </div>
               </div>
             </div>

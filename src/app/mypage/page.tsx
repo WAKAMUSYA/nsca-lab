@@ -44,13 +44,11 @@ export default function MyPage() {
   const [user, setUser] = useState<any>(null);
   const [nickname, setNickname] = useState("ゲストメンバー");
   const [isSaMember, setIsSaMember] = useState(false);
-  const [hasNscaAnnualPass, setHasNscaAnnualPass] = useState(false);
-  const [nscaExpiresAt, setNscaExpiresAt] = useState<string | null>(null);
-  const [daysLeftNsca, setDaysLeftNsca] = useState<number | null>(null);
 
   // Nickname Edit States
   const [editingNickname, setEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState("");
+  const [billingLoading, setBillingLoading] = useState(false);
   
   // Accordion Toggles
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -103,11 +101,8 @@ export default function MyPage() {
 
     if (configured) {
       supabase.auth.getUser().then(({ data: { user } }) => {
-        setUser(user);
         if (user) {
-          // Auto sync progress
-          supabaseService.syncAll();
-          // Load Profile details
+          // Load Profile details and verify SA Plan membership gate on mount
           supabase
             .from("profiles")
             .select("nickname, is_sa_member")
@@ -115,29 +110,35 @@ export default function MyPage() {
             .single()
             .then(({ data: profile }) => {
               if (profile) {
-                setNickname(profile.nickname || "メンバー");
-                setIsSaMember(profile.is_sa_member || false);
-                setNewNickname(profile.nickname || "メンバー");
+                if (profile.is_sa_member !== true) {
+                  // Kick out non-subscribed active sessions
+                  supabase.auth.signOut();
+                  setUser(null);
+                  setNickname("ゲストメンバー");
+                  setIsSaMember(false);
+                } else {
+                  setUser(user);
+                  setNickname(profile.nickname || "メンバー");
+                  setIsSaMember(true);
+                  setNewNickname(profile.nickname || "メンバー");
+                  // Auto sync progress
+                  supabaseService.syncAll();
+                }
+              } else {
+                // Safely clear undefined profiles
+                supabase.auth.signOut();
+                setUser(null);
               }
             });
-
-          // Fetch custom subscription information if present
-          // For demo, we check if they simulated the NSCA Annual Pass via LocalStorage
-          const simulatedNscaAnnual = localStorage.getItem("nsca_simulated_annual_pass");
-          if (simulatedNscaAnnual === "true") {
-            setHasNscaAnnualPass(true);
-            const savedExpiry = localStorage.getItem("nsca_simulated_expiry") || new Date(Date.now() + 324 * 24 * 60 * 60 * 1000).toISOString();
-            setNscaExpiresAt(savedExpiry);
-            const diff = Math.ceil((new Date(savedExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-            setDaysLeftNsca(diff > 0 ? diff : 0);
-          }
         } else {
+          setUser(null);
           const guestNick = localStorage.getItem("nsca_guest_nickname") || "ゲストメンバー";
           setNickname(guestNick);
           setNewNickname(guestNick);
         }
       });
     } else {
+      setUser(null);
       const guestNick = localStorage.getItem("nsca_guest_nickname") || "ゲストメンバー";
       setNickname(guestNick);
       setNewNickname(guestNick);
@@ -188,19 +189,28 @@ export default function MyPage() {
           password,
         });
         if (error) throw error;
-        setUser(data.user);
         
-        // Fetch profile
+        // Fetch profile and verify SA subscription gate
         const { data: profile } = await supabase
           .from("profiles")
           .select("nickname, is_sa_member")
           .eq("id", data.user.id)
           .single();
-        if (profile) {
-          setNickname(profile.nickname || "メンバー");
-          setIsSaMember(profile.is_sa_member || false);
-          setNewNickname(profile.nickname || "メンバー");
+
+        if (!profile || profile.is_sa_member !== true) {
+          // Immediately sign out and clear states
+          await supabase.auth.signOut();
+          setUser(null);
+          setNickname("ゲストメンバー");
+          setIsSaMember(false);
+          setAuthError("⚠️ ログイン制限: このアカウントはSA月額プラン(500円)の有効なご契約が確認できません。アプリの全機能をご利用いただくには、ご加入が必要です。");
+          return;
         }
+
+        setUser(data.user);
+        setNickname(profile.nickname || "メンバー");
+        setIsSaMember(true);
+        setNewNickname(profile.nickname || "メンバー");
 
         // Load cloud data and sync
         setSyncing(true);
@@ -219,11 +229,6 @@ export default function MyPage() {
     setUser(null);
     setNickname("ゲストメンバー");
     setIsSaMember(false);
-    setHasNscaAnnualPass(false);
-    setNscaExpiresAt(null);
-    setDaysLeftNsca(null);
-    localStorage.removeItem("nsca_simulated_annual_pass");
-    localStorage.removeItem("nsca_simulated_expiry");
     setEmail("");
     setPassword("");
     setSyncStatus("idle");
@@ -250,6 +255,60 @@ export default function MyPage() {
     } catch (e) {
       console.error("Nickname update failed:", e);
       alert("ニックネームの更新に失敗しました。");
+    }
+  };
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      alert("ご契約にはログインが必要です。ログイン後にお手続きをお願いします。");
+      return;
+    }
+    setBillingLoading(true);
+    try {
+      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY || "price_1Pplaceholder";
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email,
+          priceId: priceId,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "決済画面の呼び出しに失敗しました。");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("通信エラーが発生しました。");
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    if (!user) return;
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "管理画面の呼び出しに失敗しました。");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("通信エラーが発生しました。");
+    } finally {
+      setBillingLoading(false);
     }
   };
 
@@ -291,17 +350,11 @@ export default function MyPage() {
             
             {/* Membership pills */}
             <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
-              {isSaMember && (
+              {isSaMember ? (
                 <span className="text-[9px] font-black uppercase tracking-wider bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-amber-300">
                   👑 SA月額会員
                 </span>
-              )}
-              {hasNscaAnnualPass && (
-                <span className="text-[9px] font-black uppercase tracking-wider bg-indigo-500 text-indigo-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-indigo-400 shadow-sm">
-                  🎫 NSCA年間パス会員
-                </span>
-              )}
-              {!isSaMember && !hasNscaAnnualPass && (
+              ) : (
                 <span className="text-[9px] font-medium bg-white/10 text-slate-300 px-2 py-0.5 rounded-full border border-white/5">
                   👤 一般メンバー
                 </span>
@@ -474,63 +527,48 @@ export default function MyPage() {
                 <div className="flex flex-col gap-2.5">
                   
                   {/* SA Monthly plan card */}
-                  <div className="p-3 bg-white border border-slate-200/80 rounded-xl flex justify-between items-start shadow-sm">
-                    <div>
-                      <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
-                        👑 Strength Arts 月額会員
-                      </p>
-                      <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed">
-                        全PWAサービスの制限を解除する共通プラン
-                      </p>
+                  <div className="p-4 bg-white border border-slate-200/80 rounded-xl flex flex-col gap-3 shadow-sm relative overflow-hidden">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                          👑 Strength Arts 月額会員
+                        </p>
+                        <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed">
+                          全PWAサービスの制限を解除する共通プラン（月額500円）
+                        </p>
+                      </div>
+                      <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-lg border transition-all ${
+                        isSaMember 
+                          ? "bg-amber-100 text-amber-800 border-amber-300" 
+                          : "bg-slate-50 text-slate-400 border-slate-200"
+                      }`}>
+                        {isSaMember ? "加入中" : "未加入"}
+                      </span>
                     </div>
-                    <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-lg border transition-all ${
-                      isSaMember 
-                        ? "bg-amber-100 text-amber-800 border-amber-300" 
-                        : "bg-slate-50 text-slate-400 border-slate-200"
-                    }`}>
-                      {isSaMember ? "加入中" : "未加入"}
-                    </span>
-                  </div>
 
-                  {/* NSCA annual pass card */}
-                  <div className="p-3 bg-white border border-slate-200/80 rounded-xl flex justify-between items-start shadow-sm">
-                    <div>
-                      <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
-                        🎫 NSCA LAB 専用年間パス
-                      </p>
-                      <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed">
-                        NSCA LAB特訓対策を1年間無制限で使い倒せる専用パス
-                      </p>
+                    {/* Stripe checkout or portal redirect buttons */}
+                    <div className="pt-2 border-t border-slate-100">
+                      {isSaMember ? (
+                        <button
+                          onClick={handleManageBilling}
+                          disabled={billingLoading}
+                          className="w-full bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 text-slate-700 font-extrabold text-[10px] py-2.5 rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                          {billingLoading ? "接続中..." : "💳 ご契約内容の確認・変更・解約"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleSubscribe}
+                          disabled={billingLoading}
+                          className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-extrabold text-[10px] py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-indigo-200"
+                        >
+                          {billingLoading ? "接続中..." : "👑 SA月額プラン(500円)に申し込む"}
+                        </button>
+                      )}
                     </div>
-                    <span className={`text-[8.5px] font-black px-2 py-0.5 rounded-lg border transition-all ${
-                      hasNscaAnnualPass 
-                        ? "bg-indigo-100 text-indigo-800 border-indigo-300" 
-                        : "bg-slate-50 text-slate-400 border-slate-200"
-                    }`}>
-                      {hasNscaAnnualPass ? "加入中" : "未加入"}
-                    </span>
                   </div>
-
                 </div>
               </div>
-
-              {/* C. Remaining Days - NSCA Year Pass ONLY (Tucked inside Settings accordion) */}
-              {hasNscaAnnualPass && daysLeftNsca !== null && (
-                <div className="border-t border-slate-100 pt-4 animate-in slide-in-from-top-4 duration-300">
-                  <label className="text-[10px] font-black text-slate-400 block mb-2 uppercase tracking-wider">⏳ 年間パス残り日数有効期限</label>
-                  <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl p-4 shadow-md flex items-center gap-3.5">
-                    <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center text-white flex-shrink-0">
-                      <Clock className="w-4.5 h-4.5 animate-pulse" />
-                    </div>
-                    <div>
-                      <p className="text-[9px] text-indigo-100 font-bold uppercase tracking-wider">NSCA LAB 年間パス 有効期限</p>
-                      <h4 className="font-extrabold text-xs mt-0.5">残り {daysLeftNsca} 日間利用可能</h4>
-                      <p className="text-[8.5px] text-indigo-200 mt-0.5">満了日: {new Date(nscaExpiresAt!).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
             </div>
           )}
         </div>

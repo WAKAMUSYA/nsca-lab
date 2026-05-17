@@ -18,3 +18,16 @@ export const isSupabaseConfigured = (): boolean => {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== "placeholder-anon-key"
   );
 };
+
+// Admin client for server-side secure operations (bypassing RLS in Webhooks)
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+export const supabaseAdmin = createClient(
+  supabaseUrl,
+  supabaseServiceKey || supabaseAnonKey,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  }
+);

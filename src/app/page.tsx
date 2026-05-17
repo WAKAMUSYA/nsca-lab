@@ -35,7 +35,6 @@ export default function Home() {
   const [nickname, setNickname] = useState<string>("ゲスト");
   const [isConfigured, setIsConfigured] = useState(false);
   const [isSaMember, setIsSaMember] = useState<boolean>(false);
-  const [hasNscaAnnualPass, setHasNscaAnnualPass] = useState<boolean>(false);
 
   // Load active user and nickname from Supabase
   useEffect(() => {
@@ -45,10 +44,6 @@ export default function Home() {
       const configured = isSupabaseConfigured();
       setIsConfigured(configured);
       
-      // Load simulated annual pass
-      const simulatedNscaAnnual = localStorage.getItem("nsca_simulated_annual_pass");
-      setHasNscaAnnualPass(simulatedNscaAnnual === "true");
-
       if (configured) {
         try {
           const { data: { user } } = await supabase.auth.getUser();
@@ -74,8 +69,7 @@ export default function Home() {
     checkUser();
 
     const handleStorageUpdate = () => {
-      const simulatedNscaAnnual = localStorage.getItem("nsca_simulated_annual_pass");
-      setHasNscaAnnualPass(simulatedNscaAnnual === "true");
+      checkUser();
     };
     
     window.addEventListener("nsca_storage_update", handleStorageUpdate);
@@ -386,7 +380,7 @@ export default function Home() {
         </div>
 
         {/* Conditional Upsell Block for Non-members (Hides completely for active members) */}
-        {!(isSaMember || hasNscaAnnualPass) && (
+        {!isSaMember && (
           /* Non-Member View (Displays high-converting premium pricing tiers) */
           <div className="flex flex-col gap-4 mt-8 animate-in fade-in duration-300">
             
@@ -396,44 +390,21 @@ export default function Home() {
                 特訓プランのご案内（お試し体験無料）
               </h4>
               
-              <div className="grid grid-cols-2 gap-2.5">
-                
-                {/* SA Monthly pass pricing */}
-                <div className="p-3.5 bg-white border border-slate-200 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500/5 rounded-full blur-md" />
-                  <div>
-                    <span className="text-[8px] bg-amber-100 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded font-black">
-                      👑 共通プラン
-                    </span>
-                    <h5 className="text-[11px] font-black text-slate-800 mt-2">SA月額会員</h5>
-                    <p className="text-[10px] text-indigo-600 font-bold mt-0.5">月額 500円</p>
-                    <p className="text-[8.5px] text-slate-400 mt-1.5 leading-relaxed">
-                      NSCA LAB・SA本体・腰痛サイトなど、全PWA機能を開放する共通プラン。
-                    </p>
-                  </div>
-                  <Link href="/mypage" className="mt-4 w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[9px] py-1.5 rounded-lg text-center shadow-sm block transition-all">
-                    プランを見る
-                  </Link>
+              {/* SA Monthly pass pricing centered */}
+              <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500/5 rounded-full blur-md" />
+                <div className="flex-1 pr-4">
+                  <span className="text-[8px] bg-amber-100 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded font-black">
+                    👑 SA月額プレミアム会員
+                  </span>
+                  <h5 className="text-xs font-black text-slate-800 mt-2">SA月額プラン (500円/月)</h5>
+                  <p className="text-[9.5px] text-slate-400 mt-1 leading-relaxed">
+                    模擬試験・弱点分析・自動間違いノートなど、NSCA LABを含むすべてのStrength Arts連携システムが使い放題。
+                  </p>
                 </div>
-
-                {/* NSCA annual pass pricing */}
-                <div className="p-3.5 bg-white border border-slate-200 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-8 h-8 bg-indigo-500/5 rounded-full blur-md" />
-                  <div>
-                    <span className="text-[8px] bg-indigo-100 text-indigo-900 border border-indigo-200 px-1.5 py-0.5 rounded font-black">
-                      🎫 専用年間パス
-                    </span>
-                    <h5 className="text-[11px] font-black text-slate-800 mt-2">NSCA LAB 年次</h5>
-                    <p className="text-[10px] text-indigo-600 font-bold mt-0.5">年額 2,000円</p>
-                    <p className="text-[8.5px] text-slate-400 mt-1.5 leading-relaxed">
-                      NSCA合格対策（CSCS/CPT特訓）のみを1年間制限なしで使い倒せる専用パス。
-                    </p>
-                  </div>
-                  <Link href="/mypage" className="mt-4 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-[9px] py-1.5 rounded-lg text-center shadow-sm block transition-all">
-                    プランを見る
-                  </Link>
-                </div>
-
+                <Link href="/mypage" className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl text-center shadow-md flex-shrink-0 transition-all cursor-pointer">
+                  プランを見る
+                </Link>
               </div>
             </div>
 
