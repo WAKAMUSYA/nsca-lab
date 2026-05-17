@@ -285,8 +285,8 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
           </div>
 
           {/* Actual PWA App Container */}
-          <div className="w-full min-h-screen md:min-h-[760px] md:max-h-[82vh] bg-slate-50 md:rounded-[2.3rem] overflow-hidden overflow-y-auto flex flex-col relative shadow-inner">
-            <main className="flex-1 flex flex-col overflow-y-auto pb-16 md:pb-0">
+          <div className="w-full min-h-screen md:min-h-[760px] md:max-h-[82vh] bg-slate-50 md:rounded-[2.3rem] overflow-hidden flex flex-col relative shadow-inner">
+            <main className="flex-1 flex flex-col overflow-y-auto pb-24 md:pb-28">
               {children}
             </main>
             
