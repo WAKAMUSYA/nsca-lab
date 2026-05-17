@@ -10,12 +10,14 @@ import {
   User 
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
 export default function Navigation() {
   const pathname = usePathname();
   const [mistakeCount, setMistakeCount] = useState(0);
+  const [isSaMember, setIsSaMember] = useState(false);
 
-  // Poll localStorage occasionally to get mistakes count
+  // Poll localStorage occasionally to get mistakes count and verify premium status
   useEffect(() => {
     const updateCount = () => {
       try {
@@ -30,23 +32,51 @@ export default function Navigation() {
         console.error(e);
       }
     };
+
+    const checkSubscription = async () => {
+      if (!isSupabaseConfigured()) {
+        setIsSaMember(true); // default to true in local/development mode
+        return;
+      }
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_sa_member")
+            .eq("id", user.id)
+            .single();
+          setIsSaMember(!!profile?.is_sa_member);
+        } else {
+          setIsSaMember(false);
+        }
+      } catch (e) {
+        setIsSaMember(false);
+      }
+    };
     
     updateCount();
+    checkSubscription();
+    
     // Custom event listener for instant updates when mistakes are cleared/added
-    window.addEventListener("nsca_storage_update", updateCount);
-    // Standard storage listener for cross-tab updates
-    window.addEventListener("storage", updateCount);
+    const handleStorageUpdate = () => {
+      updateCount();
+      checkSubscription();
+    };
+
+    window.addEventListener("nsca_storage_update", handleStorageUpdate);
+    window.addEventListener("storage", handleStorageUpdate);
     
     return () => {
-      window.removeEventListener("nsca_storage_update", updateCount);
-      window.removeEventListener("storage", updateCount);
+      window.removeEventListener("nsca_storage_update", handleStorageUpdate);
+      window.removeEventListener("storage", handleStorageUpdate);
     };
   }, []);
 
   const navItems = [
     { href: "/", label: "ホーム", icon: Home },
     { href: "/mock", label: "模擬試験", icon: Award },
-    { href: "/mistakes", label: "間違い", icon: AlertCircle, badge: mistakeCount > 0 ? mistakeCount : undefined },
+    { href: "/mistakes", label: "間違い", icon: AlertCircle, badge: (isSaMember && mistakeCount > 0) ? mistakeCount : undefined },
     { href: "/stats", label: "分析", icon: BarChart2 },
     { href: "/mypage", label: "マイページ", icon: User },
   ];

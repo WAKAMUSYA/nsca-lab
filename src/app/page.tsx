@@ -315,9 +315,15 @@ export default function Home() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h4 className="font-bold text-sm text-slate-900">間違いノート</h4>
-                    {mistakeCount > 0 && (
-                      <span className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.2 rounded-full font-black">
-                        {mistakeCount}問
+                    {isSaMember ? (
+                      mistakeCount > 0 && (
+                        <span className="bg-rose-100 text-rose-700 text-[10px] px-2 py-0.2 rounded-full font-black">
+                          {mistakeCount}問
+                        </span>
+                      )
+                    ) : (
+                      <span className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
+                        👑 PREMIUM
                       </span>
                     )}
                   </div>
