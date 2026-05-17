@@ -286,6 +286,17 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
 
           {/* Actual PWA App Container */}
           <div className="w-full min-h-screen md:min-h-[760px] md:max-h-[82vh] bg-slate-50 md:rounded-[2.3rem] overflow-hidden flex flex-col relative shadow-inner">
+            
+            {/* Simulated Phone Status Bar on PC Desktop */}
+            <div className="hidden md:flex items-center justify-between px-6 pt-3.5 pb-2 text-[10px] font-black text-slate-100 bg-indigo-950 z-40 select-none border-b border-indigo-900/10">
+              <span>9:41 AM</span>
+              <div className="flex items-center gap-2">
+                <span>📶</span>
+                <span className="text-[8px] bg-white/10 px-1 py-0.5 rounded text-slate-300 font-bold">5G</span>
+                <span>🔋 100%</span>
+              </div>
+            </div>
+
             <main className="flex-1 flex flex-col overflow-y-auto pb-24 md:pb-28">
               {children}
             </main>
