@@ -1,0 +1,35 @@
+{
+  "name": "NSCA LAB - CSCS / NSCA-CPT 合格伴走",
+  "short_name": "NSCA LAB",
+  "description": "問題集ではなく、合格までの習慣をつくる学習PWAプラットフォーム",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "今日の5問",
+      "url": "/daily",
+      "description": "毎日の学習習慣を続ける"
+    },
+    {
+      "name": "模擬試験",
+      "url": "/mock",
+      "description": "模試を受けて実力を測定"
+    },
+    {
+      "name": "間違いノート",
+      "url": "/mistakes",
+      "description": "苦手な問題を克服"
+    }
+  ]
+}
