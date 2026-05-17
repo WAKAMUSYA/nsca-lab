@@ -43,27 +43,17 @@ CREATE POLICY "Allow individual insert" ON public.profiles FOR INSERT WITH CHECK
 -- ----------------------------------------------------------
 -- 2. SUBSCRIPTION ENGINE (SA MONTHLY ONLY)
 -- ----------------------------------------------------------
-CREATE TABLE public.products (
-  id TEXT PRIMARY KEY, -- 'prod_sa_monthly'
-  name TEXT NOT NULL,
-  price INTEGER NOT NULL, -- 500 JPY
-  description TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Seed SA Monthly Product
-INSERT INTO public.products (id, name, price, description) VALUES
-  ('prod_sa_monthly', 'Strength Arts 月額会員', 500, 'SA配下のすべてのPWAサービスが使い放題になるプラン');
-
 CREATE TABLE public.subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  product_id TEXT REFERENCES public.products(id) ON DELETE RESTRICT NOT NULL,
+  product_key TEXT NOT NULL DEFAULT 'strength_arts_member',
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
   status TEXT NOT NULL DEFAULT 'active', -- 'active' | 'canceled' | 'expired'
   current_period_end TIMESTAMP WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE (user_id, product_id)
+  UNIQUE (user_id, product_key)
 );
 
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
