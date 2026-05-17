@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { QUESTION_CATEGORIES } from "@/data/questions";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { 
   ArrowLeft, 
   BarChart2, 
@@ -11,7 +12,9 @@ import {
   Calendar, 
   ChevronRight, 
   Zap, 
-  PieChart
+  PieChart,
+  Sparkles,
+  CheckCircle2
 } from "lucide-react";
 
 export default function LearningStats() {
@@ -114,8 +117,45 @@ export default function LearningStats() {
     }
   };
 
+  const [isSaMember, setIsSaMember] = useState<boolean | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
   useEffect(() => {
-    loadStats();
+    const checkSubscription = async () => {
+      if (!isSupabaseConfigured()) {
+        setIsSaMember(true);
+        setCheckingAuth(false);
+        loadStats();
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_sa_member")
+            .eq("id", user.id)
+            .single();
+
+          if (profile?.is_sa_member) {
+            setIsSaMember(true);
+          } else {
+            setIsSaMember(false);
+          }
+        } else {
+          setIsSaMember(false);
+        }
+      } catch (e) {
+        console.error("Subscription check failed:", e);
+        setIsSaMember(false);
+      } finally {
+        setCheckingAuth(false);
+        loadStats();
+      }
+    };
+
+    checkSubscription();
 
     // Storage update listeners
     window.addEventListener("nsca_storage_update", loadStats);
@@ -138,6 +178,83 @@ export default function LearningStats() {
     }
     return "🔥 順調に習慣が身についています。間違い克服ノートの『類題を解く』をやり切ると合格率が急上昇します。";
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] text-slate-500">
+        <p className="animate-pulse text-xs font-bold">メンバー情報検証中...</p>
+      </div>
+    );
+  }
+
+  if (!isSaMember) {
+    return (
+      <div className="flex flex-col min-h-screen bg-slate-50 pb-20 relative">
+        {/* Header */}
+        <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-30 flex items-center gap-3 shadow-sm">
+          <Link href="/" className="text-slate-500 hover:text-slate-700">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="font-extrabold text-base text-slate-900">学習データ分析</h1>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center animate-in fade-in duration-300">
+          
+          {/* Glassmorphic premium locker card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-[340px] text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-650 flex items-center justify-center shadow-xl border-4 border-slate-800 mb-5 relative mx-auto">
+              <PieChart className="w-8 h-8 text-white animate-pulse" />
+            </div>
+
+            <h3 className="font-black text-sm tracking-tight mb-2">👑 弱点ドメイン統計データ</h3>
+            <p className="text-[10px] text-slate-400 leading-relaxed mb-6">
+              解答したすべての問題の正誤履歴を自動で蓄積！出題カテゴリ別の正答率や克服スピードをリアルタイム集計し、弱点を徹底分析します。
+            </p>
+
+            {/* Checklist */}
+            <div className="flex flex-col gap-2.5 text-left mb-6 text-[9px] font-bold text-slate-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>科目ごとの弱点ドメイン・正答率の自動特定</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>合格ボーダーライン（70%）との比較チャート</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>カレンダーによる毎日の学習習慣の視覚化</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>複数端末間でリアルタイム同期するクラウド学習データ</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-2.5">
+              <Link
+                href="/subscribe"
+                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-black text-xs py-3.5 rounded-xl shadow-lg shadow-amber-950/40 transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                SA月額プラン(500円)に加入して解放
+              </Link>
+              <Link
+                href="/mypage"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-3 rounded-xl transition-all active:scale-98 flex items-center justify-center gap-1.5"
+              >
+                すでに会員の方はログイン
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 pb-24">

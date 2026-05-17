@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { mockExams, sampleQuestions, Question } from "@/data/questions";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
+import { supabaseService } from "@/lib/supabaseService";
 import { 
   ArrowLeft, 
   Award, 
@@ -63,12 +64,16 @@ export default function MockExams() {
 
   // Scroll main container to top when switching questions
   useEffect(() => {
-    const scrollable = document.querySelector('main');
-    if (scrollable) {
-      scrollable.scrollTo({ top: 0, behavior: "instant" as any });
-    } else {
+    const scrollToTop = () => {
+      const scrollable = document.querySelector('main');
+      if (scrollable) {
+        scrollable.scrollTo(0, 0);
+      }
       window.scrollTo(0, 0);
-    }
+    };
+    scrollToTop();
+    const timer = setTimeout(scrollToTop, 50);
+    return () => clearTimeout(timer);
   }, [currentQIndex]);
 
   // Start exam handler
@@ -159,6 +164,8 @@ export default function MockExams() {
           failedQuestions.forEach((fq) => {
             if (!mistakesList.some((m: any) => m.id === fq.id)) {
               mistakesList.push(fq);
+              // Real-time cloud sync for premium users
+              supabaseService.addCloudMistake(fq);
             }
           });
           localStorage.setItem("nsca_mistakes", JSON.stringify(mistakesList));

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sampleQuestions, Question } from "@/data/questions";
+import { supabaseService } from "@/lib/supabaseService";
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -52,12 +53,16 @@ export default function DailyQuest() {
 
   // Scroll main container to top when switching questions
   useEffect(() => {
-    const scrollable = document.querySelector('main');
-    if (scrollable) {
-      scrollable.scrollTo({ top: 0, behavior: "instant" as any });
-    } else {
+    const scrollToTop = () => {
+      const scrollable = document.querySelector('main');
+      if (scrollable) {
+        scrollable.scrollTo(0, 0);
+      }
       window.scrollTo(0, 0);
-    }
+    };
+    scrollToTop();
+    const timer = setTimeout(scrollToTop, 50);
+    return () => clearTimeout(timer);
   }, [currentIndex]);
 
   const handleOptionSelect = (index: number) => {
@@ -83,12 +88,16 @@ export default function DailyQuest() {
         
         // Avoid duplicate mistakes
         if (!list.some((q) => q.id === currentQuestion.id)) {
-          list.push({
+          const failedQ = {
             ...currentQuestion,
             dateFailed: new Date().toISOString(),
-          });
+          };
+          list.push(failedQ);
           localStorage.setItem("nsca_mistakes", JSON.stringify(list));
           window.dispatchEvent(new Event("nsca_storage_update"));
+          
+          // Real-time cloud sync for premium users
+          supabaseService.addCloudMistake(failedQ);
         }
       } catch (e) {
         console.error(e);
@@ -190,12 +199,16 @@ export default function DailyQuest() {
         const stored = localStorage.getItem("nsca_mistakes");
         let list: any[] = stored ? JSON.parse(stored) : [];
         if (!list.some((q) => q.id === similarQuestion.id)) {
-          list.push({
+          const failedQ = {
             ...similarQuestion,
             dateFailed: new Date().toISOString(),
-          });
+          };
+          list.push(failedQ);
           localStorage.setItem("nsca_mistakes", JSON.stringify(list));
           window.dispatchEvent(new Event("nsca_storage_update"));
+          
+          // Real-time cloud sync for premium users
+          supabaseService.addCloudMistake(failedQ);
         }
       } catch (e) {
         console.error(e);

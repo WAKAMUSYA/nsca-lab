@@ -27,11 +27,31 @@ export const supabaseService = {
   },
 
   /**
+   * Helper: Check if user has an active premium subscription
+   */
+  async isUserPremium(userId: string): Promise<boolean> {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_sa_member")
+        .eq("id", userId)
+        .single();
+      return !!profile?.is_sa_member;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
    * 1. Dynamic Profile Synchronization
    */
   async syncProfile() {
     const user = await this.getActiveUser();
     if (!user) return;
+
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
 
     try {
       // Collect local metrics
@@ -66,6 +86,10 @@ export const supabaseService = {
   async syncMistakes() {
     const user = await this.getActiveUser();
     if (!user) return;
+
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
 
     try {
       // Fetch cloud mistakes
@@ -137,6 +161,10 @@ export const supabaseService = {
     const user = await this.getActiveUser();
     if (!user) return;
 
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
+
     try {
       await supabase
         .from("nsca_mistakes")
@@ -164,6 +192,10 @@ export const supabaseService = {
     const user = await this.getActiveUser();
     if (!user) return;
 
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
+
     try {
       await supabase
         .from("nsca_mistakes")
@@ -181,6 +213,10 @@ export const supabaseService = {
   async syncStudyHistory() {
     const user = await this.getActiveUser();
     if (!user) return;
+
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
 
     try {
       // Fetch cloud history
@@ -229,6 +265,10 @@ export const supabaseService = {
   async syncRoadmapProgress() {
     const user = await this.getActiveUser();
     if (!user) return;
+
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
 
     try {
       // Fetch cloud progress
@@ -279,6 +319,10 @@ export const supabaseService = {
     const user = await this.getActiveUser();
     if (!user) return false;
 
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return false;
+
     try {
       // Run all sync tasks in parallel for swift response
       await Promise.all([
@@ -300,6 +344,10 @@ export const supabaseService = {
   async pullCloudDataToLocal() {
     const user = await this.getActiveUser();
     if (!user) return;
+
+    // Strict premium gate
+    const isPremium = await this.isUserPremium(user.id);
+    if (!isPremium) return;
 
     try {
       // Get stats from nsca_user_stats

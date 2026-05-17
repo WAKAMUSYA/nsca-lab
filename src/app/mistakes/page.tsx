@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { sampleQuestions, Question } from "@/data/questions";
+import { supabaseService } from "@/lib/supabaseService";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { 
   ArrowLeft, 
   AlertCircle, 
@@ -45,9 +47,48 @@ export default function MistakesNotebook() {
   const [similarIsCorrect, setSimilarIsCorrect] = useState<boolean>(false);
   const [similarActiveAiTab, setSimilarActiveAiTab] = useState<"solve" | "pitfall" | "elimination" | "mnemonic">("solve");
 
-  // Load mistakes from localStorage
+  const [isSaMember, setIsSaMember] = useState<boolean | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Load mistakes and check premium SA Monthly subscription
   useEffect(() => {
-    loadMistakes();
+    const checkSubscription = async () => {
+      if (!isSupabaseConfigured()) {
+        setIsSaMember(true);
+        setCheckingAuth(false);
+        loadMistakes();
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("is_sa_member")
+            .eq("id", user.id)
+            .single();
+
+          if (profile?.is_sa_member) {
+            setIsSaMember(true);
+            // Run mistakes sync to merge cloud with local!
+            await supabaseService.syncMistakes();
+          } else {
+            setIsSaMember(false);
+          }
+        } else {
+          setIsSaMember(false);
+        }
+      } catch (e) {
+        console.error("Subscription check failed:", e);
+        setIsSaMember(false);
+      } finally {
+        setCheckingAuth(false);
+        loadMistakes();
+      }
+    };
+
+    checkSubscription();
   }, []);
 
   const loadMistakes = () => {
@@ -73,6 +114,9 @@ export default function MistakesNotebook() {
     try {
       localStorage.setItem("nsca_mistakes", JSON.stringify(updated));
       window.dispatchEvent(new Event("nsca_storage_update"));
+      
+      // Real-time cloud sync for premium users
+      supabaseService.removeCloudMistake(id);
     } catch (err) {
       console.error(err);
     }
@@ -106,6 +150,9 @@ export default function MistakesNotebook() {
       try {
         localStorage.setItem("nsca_mistakes", JSON.stringify(updated));
         window.dispatchEvent(new Event("nsca_storage_update"));
+        
+        // Real-time cloud sync for premium users
+        supabaseService.removeCloudMistake(retakeQuestion.id);
       } catch (e) {
         console.error(e);
       }
@@ -184,6 +231,83 @@ export default function MistakesNotebook() {
       return "最近";
     }
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[80vh] text-slate-500">
+        <p className="animate-pulse text-xs font-bold">メンバー情報検証中...</p>
+      </div>
+    );
+  }
+
+  if (!isSaMember) {
+    return (
+      <div className="flex flex-col min-h-screen bg-slate-50 pb-20 relative">
+        {/* Header */}
+        <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-30 flex items-center gap-3 shadow-sm">
+          <Link href="/" className="text-slate-500 hover:text-slate-700">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="font-extrabold text-base text-slate-900">間違い克服ノート</h1>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center animate-in fade-in duration-300">
+          
+          {/* Glassmorphic premium locker card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl max-w-[340px] text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center shadow-xl border-4 border-slate-800 mb-5 relative mx-auto">
+              <Sparkles className="w-8 h-8 text-white animate-pulse" />
+            </div>
+
+            <h3 className="font-black text-sm tracking-tight mb-2">👑 間違えた問題分析</h3>
+            <p className="text-[10px] text-slate-400 leading-relaxed mb-6">
+              間違えた問題だけを自動蓄積し、AI合格特化チューターが弱点を分析！類似問題も自動生成する、合格を確実にするためのプレミアム復習機能です。
+            </p>
+
+            {/* Checklist */}
+            <div className="flex flex-col gap-2.5 text-left mb-6 text-[9px] font-bold text-slate-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>間違えた問題を自動でクラウドDBに保存・同期</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>AIチューターが「解き方コツ」「消去法」を個別指導</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>弱点を狙い撃ちした「類似問題への挑戦」</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span>何デバイスからでも同期するクラウド復習ノート</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col gap-2.5">
+              <Link
+                href="/subscribe"
+                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-black text-xs py-3.5 rounded-xl shadow-lg shadow-amber-950/40 transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                SA月額プラン(500円)に加入して解放
+              </Link>
+              <Link
+                href="/mypage"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-3 rounded-xl transition-all active:scale-98 flex items-center justify-center gap-1.5"
+              >
+                すでに会員の方はログイン
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 pb-20 relative">
