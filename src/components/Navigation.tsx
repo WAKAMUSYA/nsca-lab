@@ -52,7 +52,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="absolute bottom-0 left-0 right-0 bg-white/85 backdrop-blur-lg border-t border-slate-100 z-50 w-full shadow-2xl rounded-t-2xl">
+    <nav className="fixed md:absolute bottom-0 left-0 right-0 bg-white/85 backdrop-blur-lg border-t border-slate-100 z-50 w-full shadow-2xl rounded-t-2xl">
       <div className="flex justify-around items-center h-16 px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
