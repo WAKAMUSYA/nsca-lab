@@ -465,6 +465,103 @@ export default function MockExams() {
                   </p>
                 </div>
 
+                {/* 解答詳細・解説一覧セクション */}
+                <div className="mt-8 w-full max-w-[480px] text-left">
+                  <h3 className="text-xs font-black text-slate-200 mb-4 pb-2 border-b border-slate-800 flex items-center gap-1.5">
+                    📝 解答詳細と詳細解説
+                  </h3>
+                  
+                  <div className="flex flex-col gap-4 max-h-[380px] overflow-y-auto pr-1">
+                    {examQuestions.map((q, idx) => {
+                      const chosen = answers[idx];
+                      const isCorrect = chosen === q.answerIndex;
+
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`p-4 rounded-xl border text-[11px] leading-relaxed transition-all ${
+                            isCorrect 
+                              ? "bg-slate-900/40 border-emerald-950/60" 
+                              : "bg-slate-900/40 border-rose-950/60"
+                          }`}
+                        >
+                          {/* 問題のヘッダー情報 */}
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[9px] text-slate-500 font-bold">
+                              第 {idx + 1} 問 (ID: #{q.id})
+                            </span>
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded ${
+                              isCorrect 
+                                ? "bg-emerald-500/10 text-emerald-400" 
+                                : "bg-rose-500/10 text-rose-400"
+                            }`}>
+                              {isCorrect ? "正解 ◯" : "不正解 ✕"}
+                            </span>
+                          </div>
+
+                          {/* 問題文 */}
+                          <p className="font-bold text-slate-200 mb-3">
+                            {q.text}
+                          </p>
+
+                          {/* 選択肢とユーザーの選択状況 */}
+                          <div className="flex flex-col gap-1.5 mb-3 bg-slate-950/40 p-2.5 rounded-lg border border-slate-900/40">
+                            {q.options.map((opt, optIdx) => {
+                              const isSelected = chosen === optIdx;
+                              const isAnswer = q.answerIndex === optIdx;
+                              
+                              let optionStyle = "text-slate-400";
+                              let prefix = "　";
+                              
+                              if (isAnswer) {
+                                optionStyle = "text-emerald-400 font-extrabold";
+                                prefix = "◯ ";
+                              } else if (isSelected) {
+                                optionStyle = "text-rose-400 font-extrabold line-through";
+                                prefix = "✕ ";
+                              }
+
+                              return (
+                                <div key={optIdx} className={`flex items-start gap-1 ${optionStyle}`}>
+                                  <span className="font-mono">{prefix}</span>
+                                  <span>{opt}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* 詳細解説 */}
+                          <div className="bg-slate-950/80 p-3 rounded-lg border border-slate-900/60 text-[10px] leading-relaxed text-slate-300">
+                            <p className="font-black text-indigo-400 mb-1 flex items-center gap-1">
+                              💡 解説
+                            </p>
+                            <p className="text-slate-300">
+                              {q.explanation}
+                            </p>
+
+                            {/* AI Insights があればさらに表示 */}
+                            {q.aiInsights && (
+                              <div className="mt-2.5 pt-2 border-t border-slate-900 flex flex-col gap-1.5 text-[9.5px] text-slate-400">
+                                <div>
+                                  <span className="font-black text-amber-500">⚡ 解法インサイト:</span> {q.aiInsights.howToSolve}
+                                </div>
+                                <div>
+                                  <span className="font-black text-amber-500">⚠️ ここがひっかけ:</span> {q.aiInsights.pitfall}
+                                </div>
+                                {q.aiInsights.mnemonic && (
+                                  <div className="bg-indigo-950/30 p-1.5 rounded border border-indigo-900/30 text-indigo-300">
+                                    <span className="font-black text-indigo-400">🧠 語呂合わせ:</span> {q.aiInsights.mnemonic}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
               </div>
 
               <div className="w-full max-w-[320px] flex flex-col gap-3">
