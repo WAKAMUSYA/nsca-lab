@@ -15,14 +15,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Query profiles table to retrieve stripe_customer_id
-    const { data: profile, error: dbError } = await supabaseAdmin
-      .from("profiles")
+    // Query subscriptions table to retrieve stripe_customer_id
+    const { data: subscription, error: dbError } = await supabaseAdmin
+      .from("subscriptions")
       .select("stripe_customer_id")
-      .eq("id", userId)
-      .single();
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
 
-    if (dbError || !profile || !profile.stripe_customer_id) {
+    if (dbError || !subscription || !subscription.stripe_customer_id) {
       return NextResponse.json(
         { error: "Stripe顧客IDが見つかりませんでした。まだ決済が完了していない可能性があります。" },
         { status: 404 }
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
 
     // Create Stripe Customer Portal Session
     const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: subscription.stripe_customer_id,
       return_url: `${origin}/mypage`,
     });
 
