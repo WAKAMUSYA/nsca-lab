@@ -351,7 +351,7 @@ export default function DailyQuest() {
                     }}
                     className="w-full bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-700 py-2.5 rounded-xl font-bold text-[10px] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/50"
                   >
-                    💡 AIチューターの合格解説を読む（下へジャンプ）
+                    💡 AI解説を読む（下へジャンプ）
                   </button>
                 </div>
               )}
@@ -362,7 +362,7 @@ export default function DailyQuest() {
               <div id="ai-explanation-drawer" className="mt-6 bg-slate-900 text-slate-100 rounded-2xl p-4 shadow-xl border border-slate-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="flex items-center gap-2 mb-3 text-amber-400">
                   <Sparkles className="w-4.5 h-4.5 animate-pulse" />
-                  <h4 className="text-xs font-black uppercase tracking-wider">AI 合格特化チューター解説</h4>
+                  <h4 className="text-xs font-black uppercase tracking-wider">AI合格解説</h4>
                 </div>
 
                 {/* AI Insight Tabs - 100% focused on tactics */}
