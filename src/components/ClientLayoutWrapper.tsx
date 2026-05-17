@@ -34,7 +34,18 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   // Initialize and listen to storage updates to toggle PWA Mode and PC mode
   useEffect(() => {
     const checkState = () => {
-      const launched = localStorage.getItem("nsca_pwa_launched") === "true";
+      // Robust detection of whether the app is running in installed PWA standalone mode
+      const isStandalone = 
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes("android-app://");
+
+      // If running as an installed PWA on the home screen, automatically bypass the LP!
+      if (isStandalone) {
+        localStorage.setItem("nsca_pwa_launched", "true");
+      }
+
+      const launched = localStorage.getItem("nsca_pwa_launched") === "true" || isStandalone;
       setIsPwaLaunched(launched);
 
       const pcMode = localStorage.getItem("nsca_pc_desktop_mode") === "true";
