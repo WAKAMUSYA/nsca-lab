@@ -259,7 +259,7 @@ export default function MyPage() {
       });
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
       } else {
         alert(data.error || "決済画面の呼び出しに失敗しました。");
       }
@@ -282,7 +282,7 @@ export default function MyPage() {
       });
       const data = await res.json();
       if (data.url) {
-        window.location.href = data.url;
+        window.open(data.url, "_blank");
       } else {
         alert(data.error || "管理画面の呼び出しに失敗しました。");
       }
