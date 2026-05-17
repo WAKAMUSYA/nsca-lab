@@ -109,8 +109,6 @@ export async function POST(req: Request) {
           .from("profiles")
           .update({
             is_sa_member: true,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
             updated_at: new Date().toISOString(),
           })
           .eq("id", userId);
@@ -136,12 +134,13 @@ export async function POST(req: Request) {
         // Retrieve user_id from metadata or database lookup
         let userId = subscription.metadata?.supabase_user_id || subscription.metadata?.userId;
         if (!userId) {
-          const { data: profile } = await supabaseAdmin
-            .from("profiles")
-            .select("id")
+          const { data: subRec } = await supabaseAdmin
+            .from("subscriptions")
+            .select("user_id")
             .eq("stripe_customer_id", customerId)
-            .single();
-          userId = profile?.id;
+            .limit(1)
+            .maybeSingle();
+          userId = subRec?.user_id;
         }
 
         if (userId) {
@@ -165,7 +164,6 @@ export async function POST(req: Request) {
             .from("profiles")
             .update({
               is_sa_member: isSaMember,
-              stripe_subscription_id: subscriptionId,
               updated_at: new Date().toISOString(),
             })
             .eq("id", userId);
@@ -182,12 +180,14 @@ export async function POST(req: Request) {
 
         let userId = subscription.metadata?.supabase_user_id || subscription.metadata?.userId;
         if (!userId) {
-          const { data: profile } = await supabaseAdmin
-            .from("profiles")
-            .select("id")
+          // Look up in subscriptions table
+          const { data: subRec } = await supabaseAdmin
+            .from("subscriptions")
+            .select("user_id")
             .eq("stripe_customer_id", customerId)
-            .single();
-          userId = profile?.id;
+            .limit(1)
+            .maybeSingle();
+          userId = subRec?.user_id;
         }
 
         if (userId) {
@@ -211,7 +211,6 @@ export async function POST(req: Request) {
             .from("profiles")
             .update({
               is_sa_member: false,
-              stripe_subscription_id: null,
               updated_at: new Date().toISOString(),
             })
             .eq("id", userId);
@@ -232,12 +231,13 @@ export async function POST(req: Request) {
           
           let userId = subscription.metadata?.supabase_user_id || subscription.metadata?.userId;
           if (!userId) {
-            const { data: profile } = await supabaseAdmin
-              .from("profiles")
-              .select("id")
+            const { data: subRec } = await supabaseAdmin
+              .from("subscriptions")
+              .select("user_id")
               .eq("stripe_customer_id", customerId)
-              .single();
-            userId = profile?.id;
+              .limit(1)
+              .maybeSingle();
+            userId = subRec?.user_id;
           }
 
           if (userId) {
@@ -255,8 +255,6 @@ export async function POST(req: Request) {
 
             await supabaseAdmin.from("profiles").update({
               is_sa_member: true,
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
               updated_at: new Date().toISOString(),
             }).eq("id", userId);
 
@@ -272,12 +270,13 @@ export async function POST(req: Request) {
         const customerId = invoice.customer as string;
 
         let userId = null;
-        const { data: profile } = await supabaseAdmin
-          .from("profiles")
-          .select("id")
+        const { data: subRec } = await supabaseAdmin
+          .from("subscriptions")
+          .select("user_id")
           .eq("stripe_customer_id", customerId)
-          .single();
-        userId = profile?.id;
+          .limit(1)
+          .maybeSingle();
+        userId = subRec?.user_id;
 
         if (userId) {
           await supabaseAdmin.from("subscriptions").upsert({
