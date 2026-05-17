@@ -801,11 +801,11 @@ const sportsList = ["サッカー", "ラグビー", "バスケットボール", 
 const weightsList = [60, 65, 70, 75, 80, 85, 90, 95, 100];
 const namesList = ["佐藤選手", "田中選手", "鈴木選手", "渡辺選手", "高橋選手", "中村選手", "小林選手", "加藤選手", "吉田選手", "山田選手"];
 
-// Dynamic questions generation engine returning exactly 300 valid questions
-function generate300Questions(): Question[] {
+// Dynamic questions generation engine returning exactly 500 valid questions
+function generate500Questions(): Question[] {
   const generated: Question[] = [];
 
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < 500; i++) {
     const baseIdx = i % baseQuestions.length;
     const base = baseQuestions[baseIdx];
     
@@ -878,7 +878,7 @@ function generate300Questions(): Question[] {
       const intensity = intensities[i % intensities.length];
       const repMap: Record<number, number> = { 75: 10, 80: 8, 85: 6, 90: 4, 95: 2 };
       const correctRep = repMap[intensity];
-
+ 
       text = `アスリートの${name}がレジスタンストレーニングを行う際、ある種目を最大筋力の ${intensity}% の強度（${intensity}%1RM）で行う場合、NSCAの1RM換算テーブルに基づいて予測される限界レップ数（反復不能回数）として正しいものはどれか？`;
       
       options = ["2レップ", "4レップ", "6レップ", "8レップ", "10レップ"];
@@ -944,7 +944,7 @@ function generate300Questions(): Question[] {
       options,
       answerIndex,
       explanation,
-      similarQuestionId: `q-${((i + 5) % 300) + 1}`, // Logic to cycle similar links robustly inside the 300-question pool
+      similarQuestionId: `q-${((i + 5) % 500) + 1}`, // Logic to cycle similar links robustly inside the 500-question pool
       aiInsights: {
         howToSolve,
         pitfall: base.aiInsights?.pitfall || "NSCAの典型的な言葉の入れ替え（GTOと筋紡錘の役割逆転など）に注意してください。",
@@ -957,7 +957,7 @@ function generate300Questions(): Question[] {
   return generated;
 }
 
-export const sampleQuestions: Question[] = generate300Questions();
+export const sampleQuestions: Question[] = generate500Questions();
 
 export const mockExams = [
   {
@@ -983,5 +983,21 @@ export const mockExams = [
     totalQuestions: 100,
     timeLimit: 180,
     category: "総合"
+  },
+  {
+    id: "mock-4",
+    title: "安全・施設管理・救命措置 模擬試験",
+    description: "施設安全基準（天井高・通路幅）、緊急時対応計画（EAP）、感染症予防など施設管理に特化した模擬試験。",
+    totalQuestions: 100,
+    timeLimit: 120,
+    category: "安全＋管理"
+  },
+  {
+    id: "mock-5",
+    title: "超高確率頻出テーマ特化・最終仕上げ模試",
+    description: "過去の出題データに基づき、特に正答率の低い難問やひっかけ問題のみを集めた最難関の最終強化模擬試験。",
+    totalQuestions: 100,
+    timeLimit: 120,
+    category: "超難関特化"
   }
 ];
