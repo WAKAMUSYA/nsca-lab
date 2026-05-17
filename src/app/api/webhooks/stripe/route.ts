@@ -5,6 +5,37 @@ import { supabaseAdmin } from "@/lib/supabaseClient";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock_placeholder");
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
+// Crash-proof date parsing helper to guarantee "Invalid time value" is never thrown
+function parseSafeDate(value: any): string {
+  const fallback = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // Default fallback: 30 days
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+  try {
+    let parsed: number;
+    if (typeof value === "number") {
+      // Convert Unix timestamp in seconds to milliseconds
+      parsed = value < 10000000000 ? value * 1000 : value;
+    } else if (typeof value === "string") {
+      const num = Number(value);
+      if (!isNaN(num)) {
+        parsed = num < 10000000000 ? num * 1000 : num;
+      } else {
+        parsed = Date.parse(value);
+      }
+    } else {
+      return fallback;
+    }
+
+    if (isNaN(parsed)) {
+      return fallback;
+    }
+    return new Date(parsed).toISOString();
+  } catch {
+    return fallback;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const rawBody = await req.text();
@@ -47,10 +78,10 @@ export async function POST(req: Request) {
           break;
         }
 
-        let periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // Fallback: 30 days
+        let periodEnd = parseSafeDate(null);
         if (subscriptionId) {
           const subscription = (await stripe.subscriptions.retrieve(subscriptionId)) as any;
-          periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          periodEnd = parseSafeDate(subscription?.current_period_end);
         }
 
         // 1. Upsert subscription record with exact requested fields
@@ -100,7 +131,7 @@ export async function POST(req: Request) {
         const subscriptionId = subscription.id;
         const status = subscription.status;
         const isSaMember = status === "active" || status === "trialing";
-        const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+        const periodEnd = parseSafeDate(subscription?.current_period_end);
 
         // Retrieve user_id from metadata or database lookup
         let userId = subscription.metadata?.supabase_user_id || subscription.metadata?.userId;
@@ -169,7 +200,7 @@ export async function POST(req: Request) {
               stripe_customer_id: customerId,
               stripe_subscription_id: subscriptionId,
               status: "expired",
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              current_period_end: parseSafeDate(subscription?.current_period_end),
               updated_at: new Date().toISOString(),
             }, {
               onConflict: "user_id,product_key"
@@ -197,7 +228,7 @@ export async function POST(req: Request) {
 
         if (subscriptionId) {
           const subscription = (await stripe.subscriptions.retrieve(subscriptionId)) as any;
-          const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          const periodEnd = parseSafeDate(subscription?.current_period_end);
           
           let userId = subscription.metadata?.supabase_user_id || subscription.metadata?.userId;
           if (!userId) {
