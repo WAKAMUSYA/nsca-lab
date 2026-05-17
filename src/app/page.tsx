@@ -402,7 +402,7 @@ export default function Home() {
                     模擬試験・弱点分析・自動間違いノートなど、NSCA LABを含むすべてのStrength Arts連携システムが使い放題。
                   </p>
                 </div>
-                <Link href="/mypage" className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl text-center shadow-md flex-shrink-0 transition-all cursor-pointer">
+                <Link href="/subscribe" className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl text-center shadow-md flex-shrink-0 transition-all cursor-pointer">
                   プランを見る
                 </Link>
               </div>

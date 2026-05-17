@@ -226,7 +226,7 @@ export default function MockExams() {
                     {isLocked ? (
                       <div className="pt-2">
                         <Link
-                          href="/mypage"
+                          href="/subscribe"
                           className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md shadow-amber-950/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
                           <Lock className="w-3.5 h-3.5" />
