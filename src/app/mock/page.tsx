@@ -24,6 +24,7 @@ import {
 export default function MockExams() {
   const [completedScores, setCompletedScores] = useState<Record<string, number>>({});
   const [isSaMember, setIsSaMember] = useState(false);
+  const [examType, setExamType] = useState<string>("CSCS");
   
   // Simulation Active states
   const [activeExam, setActiveExam] = useState<typeof mockExams[0] | null>(null);
@@ -41,6 +42,9 @@ export default function MockExams() {
       if (stored) {
         setCompletedScores(JSON.parse(stored));
       }
+      
+      const storedType = localStorage.getItem("nsca_exam_type") || "CSCS";
+      setExamType(storedType);
     } catch (e) {
       console.error(e);
     }
@@ -62,6 +66,13 @@ export default function MockExams() {
     checkSubscription();
   }, []);
 
+  const handleSwitchType = (type: string) => {
+    setExamType(type);
+    localStorage.setItem("nsca_exam_type", type);
+    setIsExamRunning(false);
+    setExamResult(null);
+  };
+
   // Scroll main container to top when switching questions or completing
   useEffect(() => {
     const scrollToTop = () => {
@@ -80,9 +91,8 @@ export default function MockExams() {
   const handleStartExam = (exam: typeof mockExams[0], sprintMode = true) => {
     setActiveExam(exam);
     
-    const storedType = localStorage.getItem("nsca_exam_type") || "CSCS";
     const filteredSource = sampleQuestions.filter(
-      (q) => q.subject === "Both" || q.subject === storedType
+      (q) => q.subject === "Both" || q.subject === examType
     );
     
     // Select questions
@@ -149,9 +159,10 @@ export default function MockExams() {
 
     // Save score to localStorage
     if (activeExam) {
+      const scoreKey = `${examType}-${activeExam.id}`;
       const updatedScores = {
         ...completedScores,
-        [activeExam.id]: Math.max(completedScores[activeExam.id] || 0, percent),
+        [scoreKey]: Math.max(completedScores[scoreKey] || 0, percent),
       };
       setCompletedScores(updatedScores);
       try {
@@ -183,21 +194,48 @@ export default function MockExams() {
       {/* Dynamic Header */}
       {!isExamRunning ? (
         <>
-          <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-30 flex items-center gap-3 shadow-sm">
-            <Link href="/" className="text-slate-500 hover:text-slate-700">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <h1 className="font-extrabold text-base text-slate-900">模擬試験</h1>
+          <div className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            <div className="px-4 py-4 flex items-center gap-3">
+              <Link href="/" className="text-slate-500 hover:text-slate-700">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <h1 className="font-extrabold text-base text-slate-900">模擬試験</h1>
+            </div>
+            
+            {/* 資格種別切り替えタブ (CSCS ⇄ NSCA-CPT) */}
+            <div className="flex border-t border-slate-100">
+              <button
+                onClick={() => handleSwitchType("CSCS")}
+                className={`flex-1 py-3 text-xs font-black text-center transition-all border-b-2 ${
+                  examType === "CSCS"
+                    ? "border-indigo-600 text-indigo-600 bg-indigo-50/10"
+                    : "border-transparent text-slate-400 hover:text-slate-500"
+                }`}
+              >
+                🔥 CSCS 模擬試験 (5セット)
+              </button>
+              <button
+                onClick={() => handleSwitchType("NSCA-CPT")}
+                className={`flex-1 py-3 text-xs font-black text-center transition-all border-b-2 ${
+                  examType === "NSCA-CPT"
+                    ? "border-indigo-600 text-indigo-600 bg-indigo-50/10"
+                    : "border-transparent text-slate-400 hover:text-slate-500"
+                }`}
+              >
+                💪 NSCA-CPT 模擬試験 (5セット)
+              </button>
+            </div>
           </div>
 
           <div className="px-4 py-6 flex flex-col gap-4">
             
             {/* Mock Exams List */}
             <div className="flex flex-col gap-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">模擬試験一覧</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">模擬試験一覧 ({examType})</h3>
 
               {mockExams.map((mock) => {
-                const bestScore = completedScores[mock.id];
+                const scoreKey = `${examType}-${mock.id}`;
+                const bestScore = completedScores[scoreKey];
                 const isDone = bestScore !== undefined;
                 const isLocked = mock.id !== "mock-1" && !isSaMember;
 
@@ -221,7 +259,10 @@ export default function MockExams() {
                         ) : null}
                       </div>
                       
-                      <h4 className="font-extrabold text-sm text-slate-900 mt-2">
+                      <h4 className="font-extrabold text-sm text-slate-900 mt-2 flex items-center gap-1.5 animate-in fade-in duration-300">
+                        <span className="text-[8px] bg-slate-100 text-slate-500 font-black px-1.5 py-0.5 rounded border border-slate-200">
+                          {examType}
+                        </span>
                         {mock.title}
                       </h4>
                       <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
