@@ -610,22 +610,13 @@ export default function MyPage() {
                               </p>
                             </div>
                           ) : (
-                            <>
-                              <button
-                                onClick={handleManageBilling}
-                                disabled={billingLoading}
-                                className="w-full bg-indigo-50 hover:bg-indigo-100 disabled:bg-indigo-50 text-indigo-700 font-extrabold text-[10px] py-2.5 rounded-xl border border-indigo-100/50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                              >
-                                {billingLoading ? "接続中..." : "💳 ご契約内容の確認・プラン変更"}
-                              </button>
-                              <button
-                                onClick={() => setShowCancelModal(true)}
-                                disabled={billingLoading}
-                                className="w-full bg-white hover:bg-rose-50/60 disabled:bg-slate-50 text-rose-600 border border-rose-100 font-extrabold text-[10px] py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                              >
-                                {billingLoading ? "接続中..." : "🚫 月額プランの解約手続き"}
-                              </button>
-                            </>
+                            <button
+                              onClick={() => setShowCancelModal(true)}
+                              disabled={billingLoading}
+                              className="w-full bg-white hover:bg-rose-50/60 disabled:bg-slate-50 text-rose-600 border border-rose-100 font-extrabold text-[10px] py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              {billingLoading ? "接続中..." : "🚫 月額プランの解約手続き"}
+                            </button>
                           )}
                         </div>
                       ) : (
