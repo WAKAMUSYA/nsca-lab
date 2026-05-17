@@ -408,19 +408,17 @@ export default function MyPage() {
           </div>
         )}
 
-        {/* 1. Target Exam Customizer (目標と受験設定 - Outside accordion, positioned at the very top) */}
+        {/* 1. Target Exam Customizer (目標設定 - Outside accordion, positioned at the very top) */}
         <div className="premium-card p-5 bg-white shadow-md border border-slate-100 flex flex-col gap-3.5 relative overflow-hidden animate-in fade-in duration-300">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
           
           <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
             <ShieldCheck className="w-4 h-4 text-indigo-600" />
-            目標と受験予定モデル設定
+            目標設定
           </h3>
 
           <div className="flex flex-col gap-3.5">
             <div>
-              <label className="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider">🎯 学習中の受験モデル</label>
-              
               {/* Type Toggles */}
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -448,7 +446,6 @@ export default function MyPage() {
 
             {/* Date Picker */}
             <div>
-              <label className="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider">📅 本試験の予定日</label>
               <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 shadow-inner">
                 <span className="text-[10px] text-slate-500 font-bold flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -465,7 +462,7 @@ export default function MyPage() {
           </div>
         </div>
 
-        {/* 2. Unified App Settings & Account Plan Card (各種設定) */}
+        {/* 2. Unified App Settings & Account Plan Card (設定) */}
         <div className="premium-card bg-white shadow-md border border-slate-100 overflow-hidden relative transition-all duration-300">
           <button
             onClick={() => setShowSettings(!showSettings)}
@@ -473,7 +470,7 @@ export default function MyPage() {
           >
             <span className="flex items-center gap-2">
               <Settings className="w-4.5 h-4.5 text-indigo-600 animate-spin" style={{ animationDuration: '10s' }} />
-              アプリ各種設定・契約プラン情報
+              設定
             </span>
             <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${showSettings ? 'rotate-180' : ''}`} />
           </button>
@@ -483,7 +480,7 @@ export default function MyPage() {
               
               {/* A. Nickname Changer */}
               <div>
-                <label className="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider">👤 ニックネームの変更</label>
+                <label className="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider">👤 ニックネーム</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -498,14 +495,14 @@ export default function MyPage() {
                     className="bg-slate-900 hover:bg-slate-800 active:scale-95 text-white text-[10px] font-extrabold px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-md flex items-center gap-1"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    保存する
+                    保存
                   </button>
                 </div>
               </div>
 
               {/* B. Plan Status List */}
               <div className="border-t border-slate-100 pt-4">
-                <label className="text-[10px] font-black text-slate-400 block mb-2 uppercase tracking-wider">💳 ご契約プランの加入状態</label>
+                <label className="text-[10px] font-black text-slate-400 block mb-2 uppercase tracking-wider">💳 ご契約プラン</label>
                 <div className="flex flex-col gap-2.5">
                   
                   {/* SA Monthly plan card */}
@@ -513,7 +510,7 @@ export default function MyPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
-                          👑 Strength Arts 月額会員
+                          👑 STRENGTH ARTS 月額会員
                         </p>
                         <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed">
                           全PWAサービスの制限を解除する共通プラン（月額500円）
@@ -531,13 +528,22 @@ export default function MyPage() {
                     {/* Stripe checkout or portal redirect buttons */}
                     <div className="pt-2 border-t border-slate-100">
                       {isSaMember ? (
-                        <button
-                          onClick={handleManageBilling}
-                          disabled={billingLoading}
-                          className="w-full bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 text-slate-700 font-extrabold text-[10px] py-2.5 rounded-xl border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                        >
-                          {billingLoading ? "接続中..." : "💳 ご契約内容の確認・変更・解約"}
-                        </button>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={handleManageBilling}
+                            disabled={billingLoading}
+                            className="w-full bg-indigo-50 hover:bg-indigo-100 disabled:bg-indigo-50 text-indigo-700 font-extrabold text-[10px] py-2.5 rounded-xl border border-indigo-100/50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            {billingLoading ? "接続中..." : "💳 ご契約内容の確認・プラン変更"}
+                          </button>
+                          <button
+                            onClick={handleManageBilling}
+                            disabled={billingLoading}
+                            className="w-full bg-white hover:bg-rose-50/60 disabled:bg-slate-50 text-rose-600 border border-rose-100 font-extrabold text-[10px] py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            {billingLoading ? "接続中..." : "🚫 月額プランの解約手続き"}
+                          </button>
+                        </div>
                       ) : (
                         <button
                           onClick={handleSubscribe}
