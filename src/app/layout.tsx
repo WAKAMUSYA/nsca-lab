@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navigation from "@/components/Navigation";
+import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,16 +46,10 @@ export default function RootLayout({
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-slate-950 flex justify-center items-stretch">
-        {/* Mobile Mockup Shell Wrapper */}
-        <div className="phone-container w-full min-h-screen bg-slate-50 flex flex-col pb-16 md:pb-0">
-          <main className="flex-1 flex flex-col overflow-y-auto">
-            {children}
-          </main>
-          
-          {/* Navigation & Prompts */}
-          <Navigation />
-        </div>
+      <body className="min-h-full bg-slate-950">
+        
+        {/* Dynamic Client Layout Wrapper handles LP and PWA frame switching */}
+        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 
         {/* Client-side Service Worker Registration */}
         <script
@@ -80,3 +74,4 @@ export default function RootLayout({
     </html>
   );
 }
+
