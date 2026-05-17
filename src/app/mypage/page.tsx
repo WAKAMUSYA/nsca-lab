@@ -304,11 +304,11 @@ export default function MyPage() {
     <div className="flex flex-col min-h-screen bg-slate-50 pb-24">
       
       {/* Profile Welcome Header Banner */}
-      <div className="bg-gradient-to-b from-indigo-900 to-indigo-950 text-white px-5 pt-10 pb-16 rounded-b-[2rem] shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-b from-indigo-900 to-indigo-950 text-white px-5 pt-16 pb-24 md:pt-20 md:pb-28 rounded-b-[2.5rem] shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
         
         {/* Navigation line */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-10 md:mb-12">
           <Link href="/" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10 hover:bg-white/20 text-white transition-all">
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -317,7 +317,7 @@ export default function MyPage() {
 
         {/* User Card */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-400 to-violet-500 flex items-center justify-center text-white text-2xl font-black shadow-lg border-2 border-white/20">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-400 to-violet-500 flex items-center justify-center text-white text-2xl font-black shadow-lg border-2 border-white/20 animate-pulse" style={{ animationDuration: '3s' }}>
             {nickname.charAt(0)}
           </div>
           <div className="flex-1">
@@ -326,7 +326,7 @@ export default function MyPage() {
             </div>
             
             {/* Membership pills */}
-            <div className="flex items-center flex-wrap gap-1.5 mt-1">
+            <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
               {isSaMember && (
                 <span className="text-[9px] font-black uppercase tracking-wider bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm border border-amber-300">
                   👑 SA月額会員
@@ -348,7 +348,7 @@ export default function MyPage() {
       </div>
 
       {/* Main Body */}
-      <div className="px-4 -mt-8 flex flex-col gap-6">
+      <div className="px-4 -mt-12 md:-mt-16 flex flex-col gap-6">
 
         {/* Sleek Compact Login Box (Only when NOT logged in) */}
         {!user && (
