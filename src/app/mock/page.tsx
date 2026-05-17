@@ -62,7 +62,7 @@ export default function MockExams() {
     checkSubscription();
   }, []);
 
-  // Scroll main container to top when switching questions
+  // Scroll main container to top when switching questions or completing
   useEffect(() => {
     const scrollToTop = () => {
       const scrollable = document.querySelector('main');
@@ -74,7 +74,7 @@ export default function MockExams() {
     scrollToTop();
     const timer = setTimeout(scrollToTop, 50);
     return () => clearTimeout(timer);
-  }, [currentQIndex]);
+  }, [currentQIndex, examResult]);
 
   // Start exam handler
   const handleStartExam = (exam: typeof mockExams[0], sprintMode = true) => {

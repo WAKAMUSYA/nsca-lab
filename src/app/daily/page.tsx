@@ -51,7 +51,7 @@ export default function DailyQuest() {
     setQuestions(shuffled);
   }, []);
 
-  // Scroll main container to top when switching questions
+  // Scroll main container to top when switching questions or completing
   useEffect(() => {
     const scrollToTop = () => {
       const scrollable = document.querySelector('main');
@@ -63,7 +63,7 @@ export default function DailyQuest() {
     scrollToTop();
     const timer = setTimeout(scrollToTop, 50);
     return () => clearTimeout(timer);
-  }, [currentIndex]);
+  }, [currentIndex, isCompleted]);
 
   const handleOptionSelect = (index: number) => {
     if (isAnswered) return;
@@ -313,9 +313,9 @@ export default function DailyQuest() {
               })}
             </div>
 
-            {/* If NOT answered yet, place the "解答する" button here (highly accessible, scroll-free!) */}
-            {!isAnswered && (
-              <div className="mt-5">
+            {/* Highly accessible button block. Sitting right under the choices list! */}
+            <div className="mt-5">
+              {!isAnswered ? (
                 <button
                   onClick={handleCheck}
                   disabled={selectedOption === null}
@@ -327,12 +327,39 @@ export default function DailyQuest() {
                 >
                   解答する
                 </button>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  <button
+                    onClick={handleNext}
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white py-3.5 rounded-xl font-black text-xs shadow-md shadow-emerald-950/20 transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {currentIndex < questions.length - 1 ? (
+                      <>
+                        次の問題へ
+                        <ChevronRight className="w-4 h-4 text-white" />
+                      </>
+                    ) : (
+                      "結果を見る"
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const drawer = document.getElementById("ai-explanation-drawer");
+                      if (drawer) {
+                        drawer.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
+                    className="w-full bg-slate-100 hover:bg-slate-200 active:scale-98 text-slate-700 py-2.5 rounded-xl font-bold text-[10px] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200/50"
+                  >
+                    💡 AIチューターの合格解説を読む（下へジャンプ）
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Premium AI Assist Explanatory Drawer */}
             {isAnswered && currentQuestion.aiInsights && (
-              <div className="mt-6 bg-slate-900 text-slate-100 rounded-2xl p-4 shadow-xl border border-slate-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div id="ai-explanation-drawer" className="mt-6 bg-slate-900 text-slate-100 rounded-2xl p-4 shadow-xl border border-slate-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="flex items-center gap-2 mb-3 text-amber-400">
                   <Sparkles className="w-4.5 h-4.5 animate-pulse" />
                   <h4 className="text-xs font-black uppercase tracking-wider">AI 合格特化チューター解説</h4>
