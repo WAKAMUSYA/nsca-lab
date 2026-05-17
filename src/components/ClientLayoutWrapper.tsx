@@ -29,12 +29,16 @@ interface ClientLayoutWrapperProps {
 export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperProps) {
   const pathname = usePathname();
   const [isPwaLaunched, setIsPwaLaunched] = useState<boolean | null>(null);
+  const [isPcDesktopMode, setIsPcDesktopMode] = useState<boolean>(false);
 
-  // Initialize and listen to storage updates to toggle PWA Mode
+  // Initialize and listen to storage updates to toggle PWA Mode and PC mode
   useEffect(() => {
     const checkState = () => {
       const launched = localStorage.getItem("nsca_pwa_launched") === "true";
       setIsPwaLaunched(launched);
+
+      const pcMode = localStorage.getItem("nsca_pc_desktop_mode") === "true";
+      setIsPcDesktopMode(pcMode);
     };
     checkState();
 
@@ -60,6 +64,73 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
   // Determine if we should display the Landing Page (LP)
   // LP is active ONLY on the root "/" route and when PWA launched is false
   const showLandingPage = pathname === "/" && !isPwaLaunched;
+
+  // Handle PC Desktop study layout mode
+  if (isPcDesktopMode && !showLandingPage) {
+    return (
+      <div className="min-h-screen w-full bg-slate-100 flex flex-col relative selection:bg-indigo-500 selection:text-white">
+        {/* Backing glows */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
+        
+        {/* Desktop Header */}
+        <header className="w-full bg-slate-900 text-white px-6 py-4 flex items-center justify-between z-10 shadow-md border-b border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-extrabold text-xs shadow-lg">
+              NL
+            </div>
+            <span className="font-extrabold text-xs md:text-sm tracking-wider text-slate-100 flex items-center gap-2">
+              NSCA LAB
+              <span className="text-[9px] text-amber-400 font-extrabold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/25">
+                💻 PC大画面学習モード
+              </span>
+            </span>
+          </div>
+          
+          <button 
+            onClick={() => {
+              setIsPcDesktopMode(false);
+              localStorage.setItem("nsca_pc_desktop_mode", "false");
+              window.dispatchEvent(new Event("nsca_storage_update"));
+            }}
+            className="text-[10px] md:text-xs font-black text-slate-950 bg-amber-400 hover:bg-amber-300 active:scale-95 px-4 py-2.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            スマホ表示に戻す
+          </button>
+        </header>
+
+        {/* PC Content Container */}
+        <div className="flex-1 flex flex-col items-center w-full max-w-5xl mx-auto px-4 py-6 md:py-8 z-10 relative">
+          
+          {/* Main study frame */}
+          <div className="w-full bg-white rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden min-h-[72vh] max-h-[85vh] flex flex-col relative shadow-indigo-950/5">
+            
+            {/* Elegant header bar in Desktop card */}
+            <div className="bg-slate-900 text-slate-400 px-6 py-2.5 text-[10px] font-bold flex items-center justify-between border-b border-slate-800">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-indigo-400 animate-spin" style={{ animationDuration: '4s' }} /> 
+                模擬問題・分析・学習履歴同期中
+              </span>
+              <span>Strength Arts Cloud Sync</span>
+            </div>
+
+            <main className="flex-1 flex flex-col overflow-y-auto pb-24">
+              {children}
+            </main>
+            
+            {/* Float Navigation at the bottom of the card container */}
+            <Navigation />
+          </div>
+          
+          {/* Footer advice */}
+          <div className="text-center text-[10px] text-slate-400 mt-4 leading-relaxed font-semibold">
+            💻 PC画面では問題や図表を広く見渡すことができます。通勤・通学中はスマホ画面（PWA）に自動連携されます。
+          </div>
+        </div>
+
+      </div>
+    );
+  }
 
   if (showLandingPage) {
     // Render the stunningly gorgeous, high-converting, full-width Landing Page (LP)
@@ -263,12 +334,25 @@ export default function ClientLayoutWrapper({ children }: ClientLayoutWrapperPro
             </div>
           </div>
 
+          {/* Launch in PC Study Mode Button */}
+          <button 
+            onClick={() => {
+              setIsPcDesktopMode(true);
+              localStorage.setItem("nsca_pc_desktop_mode", "true");
+              window.dispatchEvent(new Event("nsca_storage_update"));
+            }}
+            className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 active:scale-95 text-white font-black text-xs px-5 py-4 rounded-xl shadow-lg shadow-indigo-950/20 transition-all cursor-pointer flex items-center justify-center gap-2 mt-6"
+          >
+            <Laptop className="w-4 h-4 text-indigo-200" />
+            PCモードで起動する
+          </button>
+
           <button 
             onClick={() => {
               localStorage.setItem("nsca_pwa_launched", "false");
               window.dispatchEvent(new Event("nsca_storage_update"));
             }}
-            className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 hover:underline self-start flex items-center gap-1.5 transition-all cursor-pointer mt-8"
+            className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 hover:underline self-start flex items-center gap-1.5 transition-all cursor-pointer mt-6"
           >
             ⬅️ 製品紹介（LP）ページへ戻る
           </button>
