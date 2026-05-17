@@ -50,6 +50,16 @@ export default function DailyQuest() {
     setQuestions(shuffled);
   }, []);
 
+  // Scroll main container to top when switching questions
+  useEffect(() => {
+    const scrollable = document.querySelector('main');
+    if (scrollable) {
+      scrollable.scrollTo({ top: 0, behavior: "instant" as any });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [currentIndex]);
+
   const handleOptionSelect = (index: number) => {
     if (isAnswered) return;
     setSelectedOption(index);
@@ -290,9 +300,26 @@ export default function DailyQuest() {
               })}
             </div>
 
+            {/* If NOT answered yet, place the "解答する" button here (highly accessible, scroll-free!) */}
+            {!isAnswered && (
+              <div className="mt-5">
+                <button
+                  onClick={handleCheck}
+                  disabled={selectedOption === null}
+                  className={`w-full py-3.5 rounded-xl font-black text-xs shadow-md transition-all duration-200 text-center ${
+                    selectedOption === null
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white shadow-lg shadow-indigo-200"
+                  }`}
+                >
+                  解答する
+                </button>
+              </div>
+            )}
+
             {/* Premium AI Assist Explanatory Drawer */}
             {isAnswered && currentQuestion.aiInsights && (
-              <div className="mt-8 bg-slate-900 text-slate-100 rounded-2xl p-4 shadow-xl border border-slate-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="mt-6 bg-slate-900 text-slate-100 rounded-2xl p-4 shadow-xl border border-slate-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
                 <div className="flex items-center gap-2 mb-3 text-amber-400">
                   <Sparkles className="w-4.5 h-4.5 animate-pulse" />
                   <h4 className="text-xs font-black uppercase tracking-wider">AI 合格特化チューター解説</h4>
@@ -386,38 +413,24 @@ export default function DailyQuest() {
                     </button>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
 
-          {/* Action Check/Next Button */}
-          <div className="mt-8">
-            {!isAnswered ? (
-              <button
-                onClick={handleCheck}
-                disabled={selectedOption === null}
-                className={`w-full py-4 rounded-2xl font-black text-sm shadow-md transition-all duration-200 text-center ${
-                  selectedOption === null
-                    ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                    : "bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white"
-                }`}
-              >
-                解答する
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="w-full bg-slate-900 hover:bg-slate-800 active:scale-98 text-white py-4 rounded-2xl font-black text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-1.5"
-              >
-                {currentIndex < questions.length - 1 ? (
-                  <>
-                    次の問題へ
-                    <ChevronRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  "結果を見る"
-                )}
-              </button>
+                {/* Next Question / Results Button (Placed inline at the end of explanation for a perfect fluid reading flow!) */}
+                <div className="mt-6 pt-4 border-t border-slate-800">
+                  <button
+                    onClick={handleNext}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white py-3.5 rounded-xl font-black text-xs shadow-md transition-all duration-200 flex items-center justify-center gap-1.5 shadow-indigo-950/40"
+                  >
+                    {currentIndex < questions.length - 1 ? (
+                      <>
+                        次の問題へ
+                        <ChevronRight className="w-4 h-4" />
+                      </>
+                    ) : (
+                      "結果を見る"
+                    )}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>

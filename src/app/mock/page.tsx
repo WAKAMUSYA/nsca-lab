@@ -61,6 +61,16 @@ export default function MockExams() {
     checkSubscription();
   }, []);
 
+  // Scroll main container to top when switching questions
+  useEffect(() => {
+    const scrollable = document.querySelector('main');
+    if (scrollable) {
+      scrollable.scrollTo({ top: 0, behavior: "instant" as any });
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [currentQIndex]);
+
   // Start exam handler
   const handleStartExam = (exam: typeof mockExams[0], sprintMode = true) => {
     setActiveExam(exam);
@@ -325,8 +335,39 @@ export default function MockExams() {
                   })}
                 </div>
 
-                {/* Navigation Question Grid Drawer */}
-                <div className="mt-8 pt-6 border-t border-slate-800">
+                {/* Navigation Controls (Placed immediately below options for scroll-free accessibility!) */}
+                <div className="mt-5 flex flex-col gap-3">
+                  <div className="flex justify-between items-center gap-3">
+                    <button
+                      disabled={currentQIndex === 0}
+                      onClick={() => setCurrentQIndex((prev) => prev - 1)}
+                      className="flex-1 border border-slate-800 bg-slate-950 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-900 py-3 rounded-xl text-xs font-bold text-slate-300 flex items-center justify-center gap-1 transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      戻る
+                    </button>
+                    
+                    {currentQIndex < examQuestions.length - 1 ? (
+                      <button
+                        onClick={() => setCurrentQIndex((prev) => prev + 1)}
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1 transition-all shadow-md shadow-indigo-600/10"
+                      >
+                        次へ
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSubmitExam}
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl text-xs font-black text-white flex items-center justify-center gap-1 transition-all shadow-md shadow-indigo-600/10"
+                      >
+                        試験を終了する
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Secondary: Navigation Question Grid Drawer (Placed below controls) */}
+                <div className="mt-6 pt-5 border-t border-slate-800">
                   <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">解答状況グリッド</h4>
                   <div className="flex flex-wrap gap-2">
                     {examQuestions.map((_, idx) => {
@@ -356,46 +397,15 @@ export default function MockExams() {
                   </div>
                 </div>
 
-              </div>
-
-              {/* Bottom control row */}
-              <div className="mt-8 flex flex-col gap-4">
-                <div className="flex justify-between items-center gap-3">
+                <div className="mt-5 pt-3 border-t border-slate-800/40 text-center">
                   <button
-                    disabled={currentQIndex === 0}
-                    onClick={() => setCurrentQIndex((prev) => prev - 1)}
-                    className="flex-1 border border-slate-800 bg-slate-950 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-900 py-3.5 rounded-xl text-xs font-bold text-slate-300 flex items-center justify-center gap-1 transition-all"
+                    onClick={handleSubmitExam}
+                    className="text-center text-[10px] text-slate-500 font-bold hover:text-slate-400 py-1 transition-colors"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                    戻る
+                    途中で提出して終了する
                   </button>
-                  
-                  {currentQIndex < examQuestions.length - 1 ? (
-                    <button
-                      onClick={() => setCurrentQIndex((prev) => prev + 1)}
-                      className="flex-1 bg-slate-800 hover:bg-slate-700 py-3.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1 transition-all"
-                    >
-                      次へ
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSubmitExam}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-500 py-3.5 rounded-xl text-xs font-black text-white flex items-center justify-center gap-1 transition-all shadow-md shadow-indigo-600/10"
-                    >
-                      試験を終了する
-                    </button>
-                  )}
                 </div>
-
-                <button
-                  onClick={handleSubmitExam}
-                  className="w-full text-center text-[10px] text-slate-500 font-bold hover:text-slate-400 py-1.5 transition-colors"
-                >
-                  途中で提出して終了する
-                </button>
               </div>
-
             </div>
           ) : (
             /* Results Screen */
