@@ -44,6 +44,10 @@ export default function MyPage() {
   const [user, setUser] = useState<any>(null);
   const [nickname, setNickname] = useState("ゲストメンバー");
   const [isSaMember, setIsSaMember] = useState(false);
+  const [subStatus, setSubStatus] = useState<string>("none"); // "active" | "canceled" | "expired" | "none"
+  const [subPeriodEnd, setSubPeriodEnd] = useState<string>("");
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showCancelSuccessModal, setShowCancelSuccessModal] = useState(false);
 
   // Nickname Edit States
   const [editingNickname, setEditingNickname] = useState(false);
@@ -114,6 +118,21 @@ export default function MyPage() {
                 setNickname(profile.nickname || "メンバー");
                 setIsSaMember(!!profile.is_sa_member);
                 setNewNickname(profile.nickname || "メンバー");
+
+                // Fetch current subscription status details
+                supabase
+                  .from("subscriptions")
+                  .select("status, current_period_end")
+                  .eq("user_id", user.id)
+                  .eq("product_key", "strength_arts_member")
+                  .maybeSingle()
+                  .then(({ data: sub }) => {
+                    if (sub) {
+                      setSubStatus(sub.status || "none");
+                      setSubPeriodEnd(sub.current_period_end || "");
+                    }
+                  });
+
                 // Auto sync progress
                 supabaseService.syncAll();
               } else {
@@ -189,10 +208,22 @@ export default function MyPage() {
           .eq("id", data.user.id)
           .single();
 
+        // Fetch subscription status details
+        const { data: sub } = await supabase
+          .from("subscriptions")
+          .select("status, current_period_end")
+          .eq("user_id", data.user.id)
+          .eq("product_key", "strength_arts_member")
+          .maybeSingle();
+
         setUser(data.user);
         setNickname(profile?.nickname || "メンバー");
         setIsSaMember(!!profile?.is_sa_member);
         setNewNickname(profile?.nickname || "メンバー");
+        if (sub) {
+          setSubStatus(sub.status || "none");
+          setSubPeriodEnd(sub.current_period_end || "");
+        }
 
         // Load cloud data and sync
         setSyncing(true);
@@ -211,6 +242,8 @@ export default function MyPage() {
     setUser(null);
     setNickname("ゲストメンバー");
     setIsSaMember(false);
+    setSubStatus("none");
+    setSubPeriodEnd("");
     setEmail("");
     setPassword("");
     setSyncStatus("idle");
@@ -291,6 +324,41 @@ export default function MyPage() {
       alert("通信エラーが発生しました。");
     } finally {
       setBillingLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!user) return;
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/subscription/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSubStatus("canceled");
+        setShowCancelModal(false);
+        setShowCancelSuccessModal(true);
+      } else {
+        alert(data.error || "解約処理に失敗しました。");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("通信エラーが発生しました。");
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
+  const formatDate = (isoString: string) => {
+    if (!isoString) return "";
+    try {
+      const date = new Date(isoString);
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    } catch {
+      return "";
     }
   };
 
@@ -529,20 +597,36 @@ export default function MyPage() {
                     <div className="pt-2 border-t border-slate-100">
                       {isSaMember ? (
                         <div className="flex flex-col gap-2">
-                          <button
-                            onClick={handleManageBilling}
-                            disabled={billingLoading}
-                            className="w-full bg-indigo-50 hover:bg-indigo-100 disabled:bg-indigo-50 text-indigo-700 font-extrabold text-[10px] py-2.5 rounded-xl border border-indigo-100/50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                          >
-                            {billingLoading ? "接続中..." : "💳 ご契約内容の確認・プラン変更"}
-                          </button>
-                          <button
-                            onClick={handleManageBilling}
-                            disabled={billingLoading}
-                            className="w-full bg-white hover:bg-rose-50/60 disabled:bg-slate-50 text-rose-600 border border-rose-100 font-extrabold text-[10px] py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                          >
-                            {billingLoading ? "接続中..." : "🚫 月額プランの解約手続き"}
-                          </button>
+                          {subStatus === "canceled" ? (
+                            <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-col gap-1 items-center justify-center text-center animate-in fade-in duration-300">
+                              <span className="text-[10px] font-black text-amber-800 flex items-center gap-1.5">
+                                ⏳ 自動解約の予約済み
+                              </span>
+                              <p className="text-[9px] text-amber-700 font-bold">
+                                有効期限: <span className="font-extrabold">{formatDate(subPeriodEnd)}</span>
+                              </p>
+                              <p className="text-[8px] text-slate-400 mt-1 leading-normal">
+                                有効期限までは、引き続きすべてのプレミアム機能（試験対策）をご利用いただけます。追加の請求は発生しません。
+                              </p>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                onClick={handleManageBilling}
+                                disabled={billingLoading}
+                                className="w-full bg-indigo-50 hover:bg-indigo-100 disabled:bg-indigo-50 text-indigo-700 font-extrabold text-[10px] py-2.5 rounded-xl border border-indigo-100/50 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                {billingLoading ? "接続中..." : "💳 ご契約内容の確認・プラン変更"}
+                              </button>
+                              <button
+                                onClick={() => setShowCancelModal(true)}
+                                disabled={billingLoading}
+                                className="w-full bg-white hover:bg-rose-50/60 disabled:bg-slate-50 text-rose-600 border border-rose-100 font-extrabold text-[10px] py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              >
+                                {billingLoading ? "接続中..." : "🚫 月額プランの解約手続き"}
+                              </button>
+                            </>
+                          )}
                         </div>
                       ) : (
                         <button
@@ -665,6 +749,63 @@ export default function MyPage() {
         )}
 
       </div>
+
+      {/* In-app cancellation confirmation modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center self-center shadow-inner">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div className="text-center">
+              <h3 className="font-black text-slate-800 text-sm">月額プランを解約しますか？</h3>
+              <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
+                解約手続き完了後も、現在の支払い有効期限までは、引き続きすべての試験対策機能（CSCS/NSCA-CPT）をフルにご利用いただけます。
+              </p>
+            </div>
+            <div className="flex gap-2.5 mt-2">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-extrabold text-xs py-3 rounded-xl transition-all cursor-pointer text-center font-bold"
+              >
+                いいえ、戻る
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={billingLoading}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs py-3 rounded-xl transition-all shadow-md shadow-rose-200 flex items-center justify-center cursor-pointer"
+              >
+                {billingLoading ? "処理中..." : "はい、解約する"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancellation success modal */}
+      {showCancelSuccessModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center self-center shadow-inner">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-black text-slate-800 text-sm">解約手続きが完了しました</h3>
+              <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed font-medium">
+                自動更新の停止手続きを承りました。<br />
+                現在の有効期限（{formatDate(subPeriodEnd)}）までは、すべてのプレミアム機能をご利用いただけます。
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCancelSuccessModal(false)}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs py-3 rounded-xl transition-all shadow cursor-pointer mt-2"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

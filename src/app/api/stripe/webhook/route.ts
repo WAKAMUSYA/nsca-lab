@@ -127,6 +127,7 @@ export async function POST(req: Request) {
         const subscriptionId = subscription.id;
         const status = subscription.status;
         const isSaMember = status === "active" || status === "trialing";
+        const isCanceledPending = subscription.cancel_at_period_end === true;
         const periodEnd = parseSafeDate(subscription?.current_period_end);
 
         // Retrieve user_id from metadata or database lookup
@@ -161,7 +162,7 @@ export async function POST(req: Request) {
               product_key: "strength_arts_member",
               stripe_customer_id: customerId,
               stripe_subscription_id: subscriptionId,
-              status: isSaMember ? "active" : status,
+              status: isCanceledPending ? "canceled" : (isSaMember ? "active" : status),
               current_period_end: periodEnd,
               updated_at: new Date().toISOString(),
             }, {
