@@ -14,7 +14,8 @@ import {
   Zap, 
   PieChart,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Play
 } from "lucide-react";
 
 export default function LearningStats() {
@@ -340,9 +341,17 @@ export default function LearningStats() {
                 <div key={category} className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-center text-[10px] font-bold">
                     <span className="text-slate-700">{category}</span>
-                    <span className={hasErrors ? "text-rose-500" : "text-slate-400"}>
-                      {count}回 ミス
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={hasErrors ? "text-rose-500" : "text-slate-400"}>
+                        {count}回 ミス
+                      </span>
+                      <Link 
+                        href={`/mini-test?category=${encodeURIComponent(category)}`}
+                        className="text-[9px] bg-indigo-50 hover:bg-indigo-100 active:scale-95 text-indigo-600 px-2.5 py-1 rounded-md font-black flex items-center gap-0.5 transition-all"
+                      >
+                        <Play className="w-2.5 h-2.5 fill-indigo-600" /> 特訓
+                      </Link>
+                    </div>
                   </div>
                   
                   {/* Gauge */}

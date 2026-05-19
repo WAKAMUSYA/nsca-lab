@@ -16,7 +16,8 @@ import {
   GraduationCap, 
   ChevronRight,
   TrendingUp,
-  Map
+  Map,
+  Target
 } from "lucide-react";
 
 export default function Home() {
@@ -300,7 +301,6 @@ export default function Home() {
                       <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-black">完了</span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">毎日5分。忘却曲線に沿った最適な出題</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -327,7 +327,6 @@ export default function Home() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">間違えた問題を自動集計。再テストも1クリック</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -340,8 +339,34 @@ export default function Home() {
                   <BarChart2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900">弱点分析</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">正答率とジャンル別強弱を視覚的に分析</p>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-bold text-sm text-slate-900">弱点分析</h4>
+                    {!isSaMember && (
+                      <span className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
+                        👑 PREMIUM
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-300" />
+            </Link>
+
+            {/* Feature: Category Mini Test */}
+            <Link href="/mini-test" className="premium-card premium-card-interactive p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-650 flex items-center justify-center text-white shadow-md">
+                  <Target className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-bold text-sm text-slate-900">分野別ミニテスト</h4>
+                    {!isSaMember && (
+                      <span className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded-full font-black flex items-center gap-0.5">
+                        👑 PREMIUM
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -362,7 +387,6 @@ export default function Home() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5">本試験と同形式の100問で総合力を測定。時間制限なし</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -376,7 +400,6 @@ export default function Home() {
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-slate-900">学習計画ロードマップ</h4>
-                  <p className="text-[11px] text-slate-400 mt-0.5">合格ライン突破に必要なマイルストーン管理</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -385,54 +408,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Conditional Upsell Block for Non-members (Hides completely for active members) */}
-        {!isSaMember && (
-          /* Non-Member View (Displays high-converting premium pricing tiers) */
-          <div className="flex flex-col gap-4 mt-8 animate-in fade-in duration-300">
-            
-            {/* Premium Tiers Section */}
-            <div className="bg-indigo-50/30 rounded-2xl p-4.5 border border-slate-200/80 shadow-sm flex flex-col gap-3">
-              <h4 className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest px-0.5">
-                特訓プランのご案内（お試し体験無料）
-              </h4>
-              
-              {/* SA Monthly pass pricing centered */}
-              <div className="p-4 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500/5 rounded-full blur-md" />
-                <div className="flex-1 pr-4">
-                  <span className="text-[8px] bg-amber-100 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded font-black">
-                    👑 SA月額プレミアム会員
-                  </span>
-                  <h5 className="text-xs font-black text-slate-800 mt-2">SA月額プラン (500円/月)</h5>
-                  <p className="text-[9.5px] text-slate-400 mt-1 leading-relaxed">
-                    模擬試験・弱点分析・自動間違いノートなど、NSCA LABを含むすべてのStrength Arts連携システムが使い放題。
-                  </p>
-                </div>
-                <Link href="/subscribe" className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[10px] px-4 py-2.5 rounded-xl text-center shadow-md flex-shrink-0 transition-all cursor-pointer">
-                  プランを見る
-                </Link>
-              </div>
-            </div>
-
-            {/* Paper Book Comparison Banner */}
-            <div className="bg-indigo-50/50 rounded-2xl p-5 border border-indigo-100 flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-indigo-700">
-                <TrendingUp className="w-5 h-5" />
-                <h4 className="font-extrabold text-sm">合格したら、卒業。賢い受験者の選択</h4>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                重い紙問題集（3,000円以上）を買っても、弱点分析や間違いノートの作成はすべて手作業です。
-                NSCA LABは「試験まで使う」前提の合格伴走ツール。
-                <b>月額500円〜</b>で、合格に直結する習慣を手に入れましょう。
-              </p>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-indigo-100/50 text-[10px] text-slate-400 font-bold">
-                <span>紙問題集：約3,300円（手動分析）</span>
-                <span className="text-indigo-600 bg-white px-2 py-0.5 rounded border border-indigo-200">NSCA LAB：月額500円〜</span>
-              </div>
-            </div>
-
-          </div>
-        )}
 
         {/* Quick Settings Drawer (Interactive Setup) */}
         <div className="mt-8 premium-card p-4 border-slate-200/60">

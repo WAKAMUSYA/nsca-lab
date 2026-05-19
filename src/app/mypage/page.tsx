@@ -27,7 +27,11 @@ import {
   Zap,
   Download,
   Share,
-  Settings
+  Settings,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 export default function MyPage() {
@@ -66,6 +70,10 @@ export default function MyPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "success" | "error">("idle");
   const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const loadSettings = () => {
     try {
@@ -181,19 +189,27 @@ export default function MyPage() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
-    if (!email || !password) {
-      setAuthError("メールアドレスとパスワードを入力してください。");
+    if (!email || (!forgotPasswordMode && !password)) {
+      setAuthError("必要な項目をすべて入力してください。");
       return;
     }
 
+    setAuthLoading(true);
     try {
-      if (isSignUp) {
+      if (forgotPasswordMode) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/reset-password",
+        });
+        if (error) throw error;
+        setResetEmailSent(true);
+        setAuthError("パスワード再設定用のメールを送信しました。メールボックスをご確認ください。");
+      } else if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        setAuthError("アカウント登録が完了しました！メールをご確認の上、ログインしてください。");
+        setAuthError("アカウント登録確認メールを送信しました！メールをご確認の上、ログインしてください。");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -234,6 +250,8 @@ export default function MyPage() {
       }
     } catch (err: any) {
       setAuthError(err.message || "認証エラーが発生しました。");
+    } finally {
+      setAuthLoading(false);
     }
   };
 
@@ -417,62 +435,172 @@ export default function MyPage() {
       {/* Main Body */}
       <div className="px-4 -mt-8 md:-mt-10 flex flex-col gap-6">
 
-        {/* Sleek Compact Login Box (Only when NOT logged in) */}
+        {/* Sleek Tabbed Login Box (Only when NOT logged in) */}
         {!user && (
-          <div className="premium-card p-5 bg-white border border-slate-100 shadow-md relative overflow-hidden animate-in fade-in duration-300">
+          <div className="premium-card p-6 bg-white border border-slate-100 shadow-md relative overflow-hidden animate-in fade-in duration-300">
             <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                <KeyRound className="w-4 h-4 text-indigo-600" />
-                アカウント連携・ログイン
-              </h3>
-            </div>
+            
+            {forgotPasswordMode ? (
+              // Forgot Password Mode
+              <div>
+                <h3 className="text-xs font-black text-slate-800 mb-4 flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4 text-indigo-600" />
+                  パスワードの再設定
+                </h3>
+                <form onSubmit={handleAuth} className="flex flex-col gap-4">
+                  <p className="text-[10px] text-slate-500 leading-relaxed font-bold">
+                    ご登録のメールアドレスを入力してください。パスワード再設定用のリンクをお送りします。
+                  </p>
+                  
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <input
+                      type="email"
+                      placeholder="メールアドレス"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium text-slate-700 transition-all"
+                      required
+                    />
+                  </div>
 
-            <form onSubmit={handleAuth} className="flex flex-col gap-3">
-              <div className="flex flex-col gap-2">
-                <input
-                  type="email"
-                  placeholder="メールアドレス"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white outline-none focus:ring-1 focus:ring-indigo-500 font-medium text-slate-700"
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="パスワード (6文字以上)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white outline-none focus:ring-1 focus:ring-indigo-500 font-medium text-slate-700"
-                  required
-                />
+                  {authError && (
+                    <p className={`text-[10px] font-bold p-3 rounded-xl border animate-in fade-in ${
+                      resetEmailSent 
+                        ? "text-emerald-600 bg-emerald-50 border-emerald-100" 
+                        : "text-rose-500 bg-rose-50 border-rose-100"
+                    }`}>
+                      {authError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-extrabold text-xs py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {authLoading ? "送信中..." : "再設定メールを送信"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotPasswordMode(false);
+                      setResetEmailSent(false);
+                      setAuthError("");
+                    }}
+                    className="text-[10px] text-indigo-600 font-bold hover:underline self-center cursor-pointer mt-1"
+                  >
+                    ログインに戻る
+                  </button>
+                </form>
               </div>
+            ) : (
+              // Normal Login / Sign Up Tabs
+              <div>
+                <div className="flex border-b border-slate-100 mb-5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(false);
+                      setAuthError("");
+                    }}
+                    className={`flex-1 pb-3 text-center text-xs font-black transition-all cursor-pointer ${
+                      !isSignUp 
+                        ? 'border-b-2 border-indigo-600 text-indigo-600' 
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    ログイン
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setAuthError("");
+                    }}
+                    className={`flex-1 pb-3 text-center text-xs font-black transition-all cursor-pointer ${
+                      isSignUp 
+                        ? 'border-b-2 border-indigo-600 text-indigo-600' 
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    新規アカウント作成
+                  </button>
+                </div>
 
-              {authError && (
-                <p className="text-[9px] font-bold text-rose-500 bg-rose-50 p-2 rounded-lg border border-rose-100 animate-in fade-in">
-                  {authError}
-                </p>
-              )}
+                <form onSubmit={handleAuth} className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3">
+                    {/* Email Input */}
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email"
+                        placeholder="メールアドレス"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium text-slate-700 transition-all"
+                        required
+                        autoComplete="email"
+                      />
+                    </div>
 
-              <button
-                type="submit"
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs py-2.5 rounded-xl shadow transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
-              >
-                {isSignUp ? <UserPlus className="w-3.5 h-3.5" /> : <KeyRound className="w-3.5 h-3.5" />}
-                {isSignUp ? "新しくアカウントを作成" : "メールアドレスでログイン"}
-              </button>
+                    {/* Password Input */}
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        placeholder={isSignUp ? "パスワード (6文字以上)" : "パスワード"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs bg-slate-50 focus:bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium text-slate-700 transition-all"
+                        required
+                        autoComplete={isSignUp ? "new-password" : "current-password"}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer outline-none"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setAuthError("");
-                }}
-                className="text-[9.5px] text-indigo-600 font-bold hover:underline self-center cursor-pointer mt-1"
-              >
-                {isSignUp ? "すでにアカウントをお持ちの方（ログイン）" : "初めての方はこちら（新規アカウント作成）"}
-              </button>
-            </form>
+                  {!isSignUp && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotPasswordMode(true);
+                        setAuthError("");
+                      }}
+                      className="text-[10px] text-slate-400 font-bold hover:text-indigo-600 self-end cursor-pointer -mt-1"
+                    >
+                      パスワードをお忘れですか？
+                    </button>
+                  )}
+
+                  {authError && (
+                    <p className={`text-[10px] font-bold p-3 rounded-xl border animate-in fade-in ${
+                      authError.includes("登録確認") || authError.includes("再設定")
+                        ? "text-emerald-600 bg-emerald-50 border-emerald-100"
+                        : "text-rose-500 bg-rose-50 border-rose-100"
+                    }`}>
+                      {authError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white font-extrabold text-xs py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                  >
+                    {isSignUp ? <UserPlus className="w-3.5 h-3.5" /> : <KeyRound className="w-3.5 h-3.5" />}
+                    {authLoading ? "処理中..." : isSignUp ? "アカウントを新規登録" : "ログインする"}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         )}
 
